@@ -408,6 +408,45 @@
         .toast-box.success { border-left-color: var(--success); }
         .toast-box.warning { border-left-color: var(--warning); }
 
+        /* ===== DASHBOARD TAB EXTRAS (stat row / PPH summary / photo gallery) ===== */
+        .dash-stat-row-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .dash-stat-row-4 .admin-stat-card { padding: 10px 6px; text-align: center; }
+        .dash-stat-row-4 .admin-stat-label { font-size: 9.5px; white-space: nowrap; }
+        .dash-stat-row-4 .admin-stat-value { font-size: 19px; }
+        @media (max-width: 380px) {
+            .dash-stat-row-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .pph-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .pph-summary-box { background: var(--light-gray); border-radius: 8px; padding: 10px 12px; border-left: 4px solid #cbd5e1; }
+        .pph-summary-box.pass { border-left-color: var(--success); }
+        .pph-summary-box.fail { border-left-color: var(--warning); }
+        .pph-summary-box .pph-sum-label { font-size: 10.5px; color: var(--dhl-grey); font-weight: 600; }
+        .pph-summary-box .pph-sum-value { font-family: 'Poppins', sans-serif; font-size: 22px; font-weight: 700; margin-top: 2px; }
+        .pph-summary-box.pass .pph-sum-value { color: var(--success); }
+        .pph-summary-box.fail .pph-sum-value { color: var(--warning); }
+        .pph-summary-box .pph-sum-detail { font-size: 10px; color: #718096; margin-top: 4px; line-height: 1.5; }
+        .pph-meta-line { font-size: 11px; color: #4a5568; margin-top: 8px; background: #fffdf5; border: 1px solid #fef3c7; border-radius: 6px; padding: 8px 10px; }
+
+        .photo-gallery-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+        .photo-gallery-counts { font-size: 11px; color: var(--dhl-grey); }
+        .photo-gallery-counts b { color: var(--dhl-dark); }
+        .photo-gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; }
+        @media (min-width: 460px) { .photo-gallery-grid { grid-template-columns: repeat(3, 1fr); } }
+        .photo-card { background: var(--light-gray); border-radius: 8px; overflow: hidden; border-top: 3px solid var(--success); position: relative; }
+        .photo-card.late { border-top-color: var(--danger); }
+        .photo-card .photo-thumb-wrap { width: 100%; aspect-ratio: 1/1; background: #e2e8f0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .photo-card .photo-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .photo-card .photo-thumb-wrap .no-photo-label { font-size: 10px; color: #94a3b8; text-align: center; padding: 6px; }
+        .photo-card .photo-status-dot { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; background: var(--success); box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+        .photo-card.late .photo-status-dot { background: var(--danger); }
+        .photo-card .photo-uniform-flag { position: absolute; top: 6px; left: 6px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; background: var(--warning); box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+        .photo-card-body { padding: 6px 8px 8px; }
+        .photo-card-name { font-size: 11px; font-weight: 700; color: var(--dhl-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .photo-card-meta { font-size: 10px; color: var(--dhl-grey); margin-top: 1px; display: flex; justify-content: space-between; gap: 4px; }
+        .photo-card-meta .late-txt { color: var(--danger); font-weight: 700; }
+        .photo-card-meta .ok-txt { color: var(--success); font-weight: 700; }
+
         @media (max-width: 380px) {
             .main-title-long { font-size: 12px; }
             .sub-title-long { font-size: 9px; }
@@ -805,9 +844,9 @@
                         <input type="date" id="dashboardDate" class="form-input" style="margin-top:10px;" onchange="renderDashboardTab()">
                     </div>
 
-                    <div class="admin-stat-row">
+                    <div class="admin-stat-row dash-stat-row-4">
                         <div class="admin-stat-card">
-                            <div class="admin-stat-label">Total Couriers</div>
+                            <div class="admin-stat-label">Total</div>
                             <div class="admin-stat-value" id="dashTotalCouriers">0</div>
                         </div>
                         <div class="admin-stat-card approved">
@@ -819,7 +858,7 @@
                             <div class="admin-stat-value" id="dashLateCount" style="color:var(--danger);">0</div>
                         </div>
                         <div class="admin-stat-card pending">
-                            <div class="admin-stat-label">ยังไม่เช็คอิน</div>
+                            <div class="admin-stat-label">No Check-in</div>
                             <div class="admin-stat-value" id="dashNotYetCount">0</div>
                         </div>
                     </div>
@@ -837,6 +876,31 @@
                     <div class="form-section" style="margin-top:12px;" id="dashRiskCard">
                         <div class="section-title-form"><i class="fa-solid fa-triangle-exclamation" style="color:var(--warning);"></i> Risk Alert (สายใน 7 วันล่าสุด)</div>
                         <div class="record-list" id="dashRiskList"></div>
+                    </div>
+
+                    <div class="form-section" style="margin-top:12px;" id="dashPphCard">
+                        <div class="section-title-form"><i class="fa-solid fa-box" style="color:var(--dhl-dark);"></i> PPH Summary</div>
+                        <div class="pph-meta-line" id="dashPphMetaLine">Parcels 0 (ใหม่ 0 + เก่า 0) • Staff 0 / Sorter 0 / Courier 0</div>
+                        <div class="pph-summary-grid">
+                            <div class="pph-summary-box" id="dashPphSortBox">
+                                <div class="pph-sum-label">PPH Sort time (Target ≥ 49)</div>
+                                <div class="pph-sum-value" id="dashPphSortValue">-</div>
+                                <div class="pph-sum-detail" id="dashPphSortDetail">ยังไม่มีข้อมูล</div>
+                            </div>
+                            <div class="pph-summary-box" id="dashPphRouteBox">
+                                <div class="pph-sum-label">PPH Route prep (Target ≥ 165)</div>
+                                <div class="pph-sum-value" id="dashPphRouteValue">-</div>
+                                <div class="pph-sum-detail" id="dashPphRouteDetail">ยังไม่มีข้อมูล</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section" style="margin-top:12px;" id="dashPhotoCard">
+                        <div class="photo-gallery-header">
+                            <div class="section-title-form" style="margin-bottom:0; border-bottom:none; padding-bottom:0;"><i class="fa-solid fa-camera" style="color:var(--dhl-dark);"></i> Check-in Photos</div>
+                            <div class="photo-gallery-counts" id="dashPhotoCounts">0 คน • ไม่มียูนิฟอร์ม 0</div>
+                        </div>
+                        <div class="photo-gallery-grid" id="dashPhotoGallery"></div>
                     </div>
 
                     <button type="button" class="submit-btn" style="margin-top:12px;" onclick="exportDashboardImage()"><i class="fa-solid fa-camera"></i> สร้างรายงานวันนี้ (Export ภาพ)</button>
@@ -925,6 +989,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
@@ -936,6 +1001,52 @@
             "apikey": SB_KEY,
             "Authorization": "Bearer " + SB_KEY
         };
+
+        // ===================== REALTIME =====================
+        // ฟังการเปลี่ยนแปลงของตาราง attendance_checkins แบบสด ๆ ผ่าน Supabase Realtime
+        // เพื่อให้กราฟ/ตัวเลขในหน้า Dashboard อัปเดตทันทีเมื่อมีคนเช็คอิน
+        // (จำเป็นต้องรัน SQL: alter publication supabase_realtime add table public.attendance_checkins;
+        //  ใน Supabase ก่อน ไม่งั้นจะไม่มีอีเวนต์ส่งเข้ามาเลย)
+        let sbRealtimeClient = null;
+        function initRealtimeSubscription() {
+            if (!window.supabase || !window.supabase.createClient) {
+                console.warn("supabase-js ยังโหลดไม่สำเร็จ ข้าม realtime subscription");
+                return;
+            }
+            sbRealtimeClient = window.supabase.createClient(SB_URL, SB_KEY);
+            sbRealtimeClient
+                .channel('attendance-live')
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'attendance_checkins' },
+                    async (payload) => {
+                        await fetchAttendanceData();
+
+                        if (currentAppMode === 'admin') {
+                            const dashCard = document.getElementById('adminCardDashboard');
+                            if (dashCard && dashCard.classList.contains('show')) {
+                                renderDashboardTab();
+                            }
+                            const attCard = document.getElementById('adminCardAttendance');
+                            if (attCard && attCard.classList.contains('show')) {
+                                renderAttendanceDashboard();
+                            }
+                            const pphCard = document.getElementById('adminCardPPH');
+                            if (pphCard && pphCard.classList.contains('show')) {
+                                renderPphRouteCourierList();
+                                pullCourierCountFromCheckin();
+                            }
+                            if (payload.eventType === 'INSERT' && payload.new) {
+                                triggerToast(`🟢 ${payload.new.emp_name} เช็คอินแล้ว (${payload.new.checkin_time})`, 'success');
+                            }
+                        }
+                    }
+                )
+                .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        console.log("Realtime: subscribed to attendance_checkins");
+                    }
+                });
+        }
 
         const REPORT_CONFIG = {
             serviceId: "YOUR_EMAILJS_SERVICE_ID",
@@ -1250,9 +1361,11 @@
             if (dashboardDateField) dashboardDateField.value = todayStr();
             startLiveClock();
             await loadCourierData();
+            await fetchAttendanceData();
             if (window.emailjs && REPORT_CONFIG.publicKey) {
                 try { emailjs.init({ publicKey: REPORT_CONFIG.publicKey }); } catch (e) { console.warn("emailjs.init error:", e); }
             }
+            initRealtimeSubscription();
             await switchMode('checkin');
         });
 
@@ -1431,7 +1544,7 @@
             document.getElementById('btnPPHMode').classList.toggle('active', tab === 'pph');
             document.getElementById('btnDashboardMode').classList.toggle('active', tab === 'dashboard');
             if (tab === 'pph') loadPphDataForToday();
-            if (tab === 'dashboard') renderDashboardTab();
+            if (tab === 'dashboard') { fetchAttendanceData().then(renderDashboardTab); }
         }
 
         function startLiveClock() {
@@ -1716,6 +1829,20 @@
             if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
         }
 
+        // ปรับขนาดรูปให้เล็กลงก่อนเก็บลงฐานข้อมูล (base64 ใน text column) เพื่อไม่ให้ payload ใหญ่เกินไป
+        function resizeImageDataUrl(sourceCanvas, maxDim, quality) {
+            const srcW = sourceCanvas.width, srcH = sourceCanvas.height;
+            let outW = srcW, outH = srcH;
+            if (srcW > maxDim || srcH > maxDim) {
+                if (srcW >= srcH) { outW = maxDim; outH = Math.round(srcH * (maxDim / srcW)); }
+                else { outH = maxDim; outW = Math.round(srcW * (maxDim / srcH)); }
+            }
+            const outCanvas = document.createElement('canvas');
+            outCanvas.width = outW; outCanvas.height = outH;
+            outCanvas.getContext('2d').drawImage(sourceCanvas, 0, 0, outW, outH);
+            return outCanvas.toDataURL('image/jpeg', quality);
+        }
+
         async function captureAndCheckin() {
             if (!currentCourier || !locationOk) { triggerToast("กรุณาตรวจสอบ Courier ID และตำแหน่งก่อน", "danger"); return; }
             const uniformOk = document.getElementById('chkUniform').checked;
@@ -1735,6 +1862,7 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const capturedPhotoDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            const storedPhotoDataUrl = resizeImageDataUrl(canvas, 480, 0.7);
             video.style.display = 'none';
             canvas.style.display = 'block';
             lastCapturedPhotoDataUrl = capturedPhotoDataUrl;
@@ -1758,7 +1886,8 @@
                     distance_m: currentDistance,
                     uniform_ok: uniformOk,
                     ktb_bag_ok: ktbOk,
-                    vehicle_type: currentCourier.type || ''
+                    vehicle_type: currentCourier.type || '',
+                    photo_data: storedPhotoDataUrl
                 });
                 stopCamera();
                 document.getElementById('cameraStepBox').style.display = 'none';
@@ -1791,8 +1920,32 @@
                 await fetchAttendanceData();
                 triggerToast("เช็คอินสำเร็จ", "success");
             } catch (err) {
-                triggerToast("เช็คอินไม่สำเร็จ กรุณาลองใหม่ (ตรวจสอบว่าตั้งค่าตาราง attendance_checkins แล้ว)", "danger");
                 console.error(err);
+                // ถ้าตาราง attendance_checkins ยังไม่มีคอลัมน์ photo_data ให้ลองบันทึกใหม่แบบไม่มีรูป
+                // เพื่อไม่ให้การเช็คอินล้มเหลวทั้งหมดเพียงเพราะยังไม่ได้เพิ่มคอลัมน์
+                try {
+                    await sbInsertAttendance({
+                        courier_id: currentCourier.id,
+                        emp_name: currentCourier.name,
+                        vendor: currentCourier.vendor,
+                        checkin_date: todayStr(),
+                        checkin_time: checkinTimeStr,
+                        late_minutes: lateMinutes,
+                        status: status,
+                        distance_m: currentDistance,
+                        uniform_ok: uniformOk,
+                        ktb_bag_ok: ktbOk,
+                        vehicle_type: currentCourier.type || ''
+                    });
+                    triggerToast("เช็คอินสำเร็จ (ไม่มีคอลัมน์ photo_data ในฐานข้อมูล จึงบันทึกโดยไม่มีรูป — เพิ่มคอลัมน์ photo_data ชนิด text ในตาราง attendance_checkins เพื่อเก็บรูปด้วย)", "warning");
+                    stopCamera();
+                    document.getElementById('cameraStepBox').style.display = 'none';
+                    document.getElementById('successCheckinBox').classList.add('show');
+                    await fetchAttendanceData();
+                } catch (err2) {
+                    triggerToast("เช็คอินไม่สำเร็จ กรุณาลองใหม่ (ตรวจสอบว่าตั้งค่าตาราง attendance_checkins แล้ว)", "danger");
+                    console.error(err2);
+                }
             }
         }
 
@@ -2259,6 +2412,7 @@
             route_log: {}
         };
         let pphSaveDebounceTimer = null;
+        let pphLastSavedSnapshot = null;
 
         function openPphHelpModal() { document.getElementById('pphHelpModal').classList.add('show'); }
         function closePphHelpModal() { document.getElementById('pphHelpModal').classList.remove('show'); }
@@ -2284,6 +2438,7 @@
             } catch (err) {
                 console.warn("loadPphDataForToday error (table may not exist yet):", err);
             }
+            pphLastSavedSnapshot = JSON.stringify(pphData);
             document.getElementById('pphStaffCount').value = pphData.staff_count;
             document.getElementById('pphSorterCount').value = pphData.sorter_count;
             document.getElementById('pphNewParcels').value = pphData.new_parcels;
@@ -2314,10 +2469,33 @@
                         fs_log: pphData.fs_log,
                         route_log: pphData.route_log
                     });
+                    pphLastSavedSnapshot = JSON.stringify(pphData);
                 } catch (err) {
                     console.warn("savePphDataDebounced error (create table 'pph_daily' to persist PPH data):", err);
                 }
             }, 600);
+        }
+
+        // เรียกใช้ก่อนออกจากแท็บ PPH เพื่อบันทึกทันที ไม่ต้องรอ debounce 0.6 วินาที
+        // ป้องกันข้อมูลหายเวลาสลับแท็บเร็วหลังกดปุ่มเวลา
+        async function flushPphSaveIfPending() {
+            if (pphLastSavedSnapshot === JSON.stringify(pphData)) return;
+            clearTimeout(pphSaveDebounceTimer);
+            try {
+                await sbUpsertPphDaily({
+                    pph_date: pphData.pph_date,
+                    staff_count: pphData.staff_count,
+                    sorter_count: pphData.sorter_count,
+                    new_parcels: pphData.new_parcels,
+                    old_parcels: pphData.old_parcels,
+                    inbound_time: pphData.inbound_time,
+                    fs_log: pphData.fs_log,
+                    route_log: pphData.route_log
+                });
+                pphLastSavedSnapshot = JSON.stringify(pphData);
+            } catch (err) {
+                console.warn("flushPphSaveIfPending error:", err);
+            }
         }
 
         function onPphFieldChange() {
@@ -2582,12 +2760,13 @@
             pullCourierCountFromCheckin(true);
             renderPphRouteCourierList();
             computeAndRenderPph();
-            try { await sbUpsertPphDaily({ pph_date: pphData.pph_date, staff_count: 0, sorter_count: 0, new_parcels: 0, old_parcels: 0, inbound_time: null, fs_log: [], route_log: {} }); } catch (err) { console.warn(err); }
+            try { await sbUpsertPphDaily({ pph_date: pphData.pph_date, staff_count: 0, sorter_count: 0, new_parcels: 0, old_parcels: 0, inbound_time: null, fs_log: [], route_log: {} }); pphLastSavedSnapshot = JSON.stringify(pphData); } catch (err) { console.warn(err); }
             triggerToast("ล้างข้อมูล PPH วันนี้แล้ว", "success");
         }
 
         let dashDonutChartInstance = null;
         let dashLineChartInstance = null;
+        let dashboardPphDataCache = null;
 
         function computeAttendanceStatsForDate(dateStr) {
             const dayRecords = attendanceRecords.filter(r => r.checkin_date === dateStr);
@@ -2599,7 +2778,26 @@
             return { ontime, late, total, notYet, ontimePct };
         }
 
-        function renderDashboardTab() {
+        // ถ้า Chart.js โหลดจาก CDN ไม่สำเร็จ (เน็ตช้า/ถูกบล็อก) จะพยายามโหลดซ้ำอัตโนมัติ
+        // แทนที่จะปล่อยให้กราฟว่างเปล่าแบบเงียบ ๆ โดยไม่มีข้อความแจ้งเตือนเลย
+        let chartJsRetryInFlight = null;
+        function ensureChartJsLoaded() {
+            if (window.Chart) return Promise.resolve(true);
+            if (chartJsRetryInFlight) return chartJsRetryInFlight;
+            chartJsRetryInFlight = new Promise((resolve) => {
+                const script = document.createElement('script');
+                script.src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js";
+                script.onload = () => resolve(true);
+                script.onerror = () => {
+                    console.warn("โหลด Chart.js ไม่สำเร็จ (เช็คอินเทอร์เน็ต/ตัวบล็อกโฆษณา) — กราฟจะไม่แสดง");
+                    resolve(false);
+                };
+                document.head.appendChild(script);
+            });
+            return chartJsRetryInFlight;
+        }
+
+        async function renderDashboardTab() {
             const dateField = document.getElementById('dashboardDate');
             const dateStr = dateField.value || todayStr();
             const s = dateStr.split('-');
@@ -2616,9 +2814,14 @@
             const latePct = (stats.ontime + stats.late) > 0 ? Math.round((stats.late/(stats.ontime+stats.late))*100) : 0;
             document.querySelectorAll('#adminCardDashboard .admin-stat-card')[2].querySelector('.admin-stat-label').textContent = `Late (${latePct}%)`;
 
-            drawDashboardDonut(stats);
-            drawDashboardLineChart(dateStr);
+            const chartReady = await ensureChartJsLoaded();
+            if (chartReady) {
+                drawDashboardDonut(stats);
+                drawDashboardLineChart(dateStr);
+            }
             renderRiskAlertList(dateStr);
+            await renderDashboardPphSummary(dateStr);
+            renderDashboardPhotoGallery(dateStr);
         }
 
         function drawDashboardDonut(stats) {
@@ -2690,6 +2893,121 @@
                     <span class="status-badge status-late">เสี่ยง</span>
                 `;
                 box.appendChild(row);
+            });
+        }
+
+        // ===== Dashboard: PPH Summary card (pulls saved pph_daily row for the selected date) =====
+        async function renderDashboardPphSummary(dateStr) {
+            let row = null;
+            try { row = await sbSelectPphDaily(dateStr); } catch (err) { console.warn("renderDashboardPphSummary error:", err); }
+            dashboardPphDataCache = row;
+
+            const dayAttendance = attendanceRecords.filter(r => r.checkin_date === dateStr);
+            const staff = row ? (row.staff_count || 0) : 0;
+            const sorter = row ? (row.sorter_count || 0) : 0;
+            const courierCount = row && row._courierCountOverride != null ? row._courierCountOverride : dayAttendance.length;
+            const totalHeadcount = staff + sorter + courierCount;
+            const newParcels = row ? (row.new_parcels || 0) : 0;
+            const oldParcels = row ? (row.old_parcels || 0) : 0;
+            const totalParcels = newParcels + oldParcels;
+
+            document.getElementById('dashPphMetaLine').innerHTML =
+                `Parcels <b>${totalParcels}</b> (ใหม่ ${newParcels} + เก่า ${oldParcels}) • Staff <b>${staff}</b> / Sorter <b>${sorter}</b> / Courier <b>${courierCount}</b>`;
+
+            // Sort time PPH
+            const sortBox = document.getElementById('dashPphSortBox');
+            const sortValueEl = document.getElementById('dashPphSortValue');
+            const sortDetailEl = document.getElementById('dashPphSortDetail');
+            const inboundTime = row ? row.inbound_time : null;
+            const fsLog = row && row.fs_log ? row.fs_log : [];
+            if (!row || !inboundTime || fsLog.length === 0 || totalHeadcount === 0) {
+                sortBox.classList.remove('pass','fail');
+                sortValueEl.textContent = '-';
+                sortDetailEl.textContent = 'ยังไม่มีข้อมูล';
+            } else {
+                const inboundMin = timeStrToMinutes(inboundTime);
+                const fsMinsList = fsLog.map(timeStrToMinutes).filter(v => v !== null);
+                const avgFsMin = fsMinsList.reduce((a,b)=>a+b,0) / fsMinsList.length;
+                let hours = (avgFsMin - inboundMin) / 60;
+                if (hours < 0) hours += 24;
+                const manHours = totalHeadcount * hours;
+                const pph = manHours > 0 ? (totalParcels / manHours) : 0;
+                const passed = pph >= PPH_SORT_TARGET;
+                sortBox.classList.toggle('pass', passed);
+                sortBox.classList.toggle('fail', !passed);
+                sortValueEl.textContent = pph.toFixed(1);
+                sortDetailEl.textContent = `Inbound ${inboundTime} → Avg FS ${minutesToTimeStr(avgFsMin)} • Man-hours ${manHours.toFixed(1)} • คนรวม ${totalHeadcount}`;
+            }
+
+            // Route prep PPH
+            const routeBox = document.getElementById('dashPphRouteBox');
+            const routeValueEl = document.getElementById('dashPphRouteValue');
+            const routeDetailEl = document.getElementById('dashPphRouteDetail');
+            const routeLog = row && row.route_log ? row.route_log : {};
+            const completedPairs = Object.values(routeLog).filter(r => r && r.fs && r.dep);
+            if (!row || courierCount === 0 || completedPairs.length === 0) {
+                routeBox.classList.remove('pass','fail');
+                routeValueEl.textContent = '-';
+                routeDetailEl.textContent = 'ยังไม่มีข้อมูล';
+            } else {
+                const durationsHrs = completedPairs.map(r => {
+                    let d = (timeStrToMinutes(r.dep) - timeStrToMinutes(r.fs)) / 60;
+                    if (d < 0) d += 24;
+                    return d;
+                });
+                const avgHrsPerCourier = durationsHrs.reduce((a,b)=>a+b,0) / durationsHrs.length;
+                const manHours = completedPairs.length * avgHrsPerCourier;
+                const pph = manHours > 0 ? (totalParcels / manHours) : 0;
+                const passed = pph >= PPH_ROUTE_TARGET;
+                routeBox.classList.toggle('pass', passed);
+                routeBox.classList.toggle('fail', !passed);
+                routeValueEl.textContent = pph.toFixed(1);
+                routeDetailEl.textContent = `Avg FS→DEP ${avgHrsPerCourier.toFixed(2)} ชม. • Man-hours ${manHours.toFixed(1)} • Courier ${completedPairs.length}/${courierCount}`;
+            }
+        }
+
+        // ===== Dashboard: Check-in Photos gallery for the selected date =====
+        function renderDashboardPhotoGallery(dateStr) {
+            const grid = document.getElementById('dashPhotoGallery');
+            const countsEl = document.getElementById('dashPhotoCounts');
+            if (!grid) return;
+            const dayRecords = attendanceRecords
+                .filter(r => r.checkin_date === dateStr)
+                .slice()
+                .sort((a, b) => (a.checkin_time || '').localeCompare(b.checkin_time || ''));
+
+            const noUniformCount = dayRecords.filter(r => !r.uniform_ok).length;
+            countsEl.innerHTML = `<b>${dayRecords.length}</b> คน • ไม่มียูนิฟอร์ม <b>${noUniformCount}</b>`;
+
+            if (dayRecords.length === 0) {
+                grid.innerHTML = `<div class="empty-state-note" style="grid-column:1/-1;">ยังไม่มีใครเช็คอินในวันที่เลือก</div>`;
+                return;
+            }
+
+            grid.innerHTML = '';
+            dayRecords.forEach(r => {
+                const isLate = r.status === 'Late';
+                const card = document.createElement('div');
+                card.className = `photo-card ${isLate ? 'late' : ''}`;
+                const thumbHtml = r.photo_data
+                    ? `<img src="${r.photo_data}" alt="${r.emp_name || ''}">`
+                    : `<div class="no-photo-label"><i class="fa-solid fa-image" style="font-size:16px; opacity:0.5;"></i><br>no photo</div>`;
+                const uniformFlagHtml = !r.uniform_ok
+                    ? `<div class="photo-uniform-flag" title="ไม่มียูนิฟอร์ม"><i class="fa-solid fa-shirt"></i></div>`
+                    : '';
+                card.innerHTML = `
+                    <div class="photo-thumb-wrap">${thumbHtml}</div>
+                    <div class="photo-status-dot"><i class="fa-solid fa-${isLate ? 'xmark' : 'check'}"></i></div>
+                    ${uniformFlagHtml}
+                    <div class="photo-card-body">
+                        <div class="photo-card-name">${r.emp_name || '-'}</div>
+                        <div class="photo-card-meta">
+                            <span>${r.courier_id || '-'}</span>
+                            <span class="${isLate ? 'late-txt' : 'ok-txt'}">${r.checkin_time || '-'}${isLate ? ' LATE' : ' OK'}</span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
             });
         }
 
