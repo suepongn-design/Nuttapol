@@ -447,6 +447,24 @@
         .photo-card-meta .late-txt { color: var(--danger); font-weight: 700; }
         .photo-card-meta .ok-txt { color: var(--success); font-weight: 700; }
 
+        /* Voice listening indicator */
+        .voice-listening-active { background: #2563eb !important; position: relative; overflow: hidden; }
+        .voice-listening-active::before {
+            content: ""; position: absolute; inset: 0; border-radius: inherit;
+            box-shadow: 0 0 0 0 rgba(37,99,235,0.5);
+            animation: voicePulse 1.4s ease-out infinite;
+        }
+        @keyframes voicePulse {
+            0% { box-shadow: 0 0 0 0 rgba(37,99,235,0.55); }
+            100% { box-shadow: 0 0 0 14px rgba(37,99,235,0); }
+        }
+        .voice-live-caption {
+            margin-top: 8px; font-size: 11px; color: #2563eb; background: #eff6ff;
+            border: 1px dashed #93c5fd; border-radius: 6px; padding: 6px 8px;
+            min-height: 16px; display: none;
+        }
+        .voice-live-caption.show { display: block; }
+
         @media (max-width: 380px) {
             .main-title-long { font-size: 12px; }
             .sub-title-long { font-size: 9px; }
@@ -769,11 +787,12 @@
                         <h4><i class="fa-solid fa-box" style="color: var(--dhl-red);"></i> <span id="pphDateTitle">PPH — วันนี้</span></h4>
                         <div style="font-size:11px; color:#4a5568; line-height:1.6;">กดปุ่มเวลา = บันทึกเวลาปัจจุบันที่จุดนั้นทันที • กดซ้ำ = แก้ไข พิมพ์เวลาใหม่ หรือพิมพ์ "-" เพื่อล้าง</div>
                         <button type="button" class="ghost-btn" style="margin-top:10px;" onclick="openPphHelpModal()"><i class="fa-solid fa-circle-question"></i> วิธีคำนวณ PPH</button>
-                        <button type="button" class="submit-btn" style="margin-top:8px; background:#2563eb;" onclick="startPphVoiceEntry()">
-                            <i class="fa-solid fa-microphone"></i> พูดเพื่อบันทึกเวลา (เช่น "T05 F 09 30 D 10 40")
+                        <button type="button" class="submit-btn" id="pphVoiceBtn" style="margin-top:8px; background:#2563eb;" onclick="togglePphVoiceEntry()">
+                            <i class="fa-solid fa-microphone"></i> <span id="pphVoiceBtnLabel">พูดเพื่อบันทึกเวลา (เช่น "T05 F 09 30 D 10 40")</span>
                         </button>
+                        <div class="voice-live-caption" id="pphVoiceCaption"></div>
                         <div class="checklist-note" style="margin-top:6px;">
-                            พูดรูปแบบ: <b>T + รหัสท้าย 2 หลัก</b> ตามด้วย <b>F</b> (เวลา FS) และ/หรือ <b>D</b> (เวลา DEP) เช่น "T05 F 09 30 D 10 40" = คนขับรหัสลงท้าย 05 บันทึก FS 09:30 และ DEP 10:40 • หรือพูด "Inbound 07 30" เพื่อบันทึกเวลารถเข้า
+                            พูดรูปแบบ: <b>T + รหัสท้าย 2 หลัก</b> ตามด้วย <b>F</b> (เวลา FS) และ/หรือ <b>D</b> (เวลา DEP) เช่น "T05 F 09 30 D 10 40" = คนขับรหัสลงท้าย 05 บันทึก FS 09:30 และ DEP 10:40 • หรือพูด "Inbound 07 30" เพื่อบันทึกเวลารถเข้า • ค้างพูดได้ต่อเนื่อง ระบบจะฟังต่อเองแม้มีจังหวะเงียบ กดปุ่มซ้ำเพื่อหยุดฟัง
                         </div>
                     </div>
 
@@ -865,12 +884,12 @@
 
                     <div class="form-section" style="margin-top:12px;">
                         <div class="section-title-form">Ontime vs Late</div>
-                        <div style="max-width:220px; margin:0 auto;"><canvas id="dashDonutChart"></canvas></div>
+                        <div style="max-width:220px; height:220px; margin:0 auto; position:relative;"><canvas id="dashDonutChart"></canvas></div>
                     </div>
 
                     <div class="form-section" style="margin-top:12px;">
                         <div class="section-title-form">Ontime % — 7 วันล่าสุด</div>
-                        <canvas id="dashLineChart" height="160"></canvas>
+                        <div style="position:relative; width:100%; height:220px;"><canvas id="dashLineChart"></canvas></div>
                     </div>
 
                     <div class="form-section" style="margin-top:12px;" id="dashRiskCard">
@@ -1369,6 +1388,93 @@
             await switchMode('checkin');
         });
 
+        // ===================== RESILIENT SPEECH RECOGNITION =====================
+        // Mobile browsers auto-stop SpeechRecognition after a short pause in speech,
+        // which used to cut users off mid-sentence ("พูดได้ครึ่งเดียว"). This wrapper
+        // keeps a single session alive by automatically restarting recognition every
+        // time it ends (unless the caller/user stopped it on purpose or a max duration
+        // is reached), and accumulates all final transcript chunks across restarts so
+        // nothing spoken gets lost even if the underlying engine restarts several times.
+        let activeRecognitionSession = null;
+
+        function stopActiveRecognitionSession() {
+            if (activeRecognitionSession) {
+                activeRecognitionSession.manualStop = true;
+                try { activeRecognitionSession.recognition.stop(); } catch (e) {}
+                activeRecognitionSession = null;
+            }
+        }
+
+        function isRecognitionSessionActive() {
+            return !!activeRecognitionSession;
+        }
+
+        function startResilientRecognition(config) {
+            stopActiveRecognitionSession();
+            const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognitionCtor) {
+                config.onError && config.onError('unsupported');
+                return null;
+            }
+            const session = {
+                recognition: new SpeechRecognitionCtor(),
+                finalText: '',
+                startedAt: Date.now(),
+                manualStop: false,
+                restartCount: 0
+            };
+            const recognition = session.recognition;
+            recognition.lang = config.lang || 'th-TH';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
+
+            recognition.onresult = (e) => {
+                let interim = '';
+                for (let i = e.resultIndex; i < e.results.length; i++) {
+                    const chunk = e.results[i][0].transcript;
+                    if (e.results[i].isFinal) {
+                        session.finalText = (session.finalText + ' ' + chunk).trim();
+                    } else {
+                        interim += chunk;
+                    }
+                }
+                config.onUpdate && config.onUpdate(session.finalText.trim(), interim.trim());
+            };
+
+            recognition.onerror = (e) => {
+                console.warn("speech recognition error:", e.error);
+                if (e.error === 'not-allowed' || e.error === 'permission-denied') {
+                    session.manualStop = true;
+                    config.onError && config.onError('permission');
+                }
+                // For 'no-speech' / 'network' / 'aborted' we deliberately do nothing here
+                // and let the 'onend' handler decide whether to restart, since 'onend'
+                // always fires right after 'onerror' for these cases.
+            };
+
+            recognition.onend = () => {
+                const elapsed = Date.now() - session.startedAt;
+                const maxDuration = config.maxDurationMs || 15000;
+                const stillActive = activeRecognitionSession === session;
+                if (stillActive && !session.manualStop && elapsed < maxDuration && session.restartCount < 60) {
+                    session.restartCount++;
+                    setTimeout(() => {
+                        if (activeRecognitionSession === session && !session.manualStop) {
+                            try { recognition.start(); } catch (err) { console.warn("restart failed", err); }
+                        }
+                    }, 150);
+                } else {
+                    if (activeRecognitionSession === session) activeRecognitionSession = null;
+                    config.onDone && config.onDone(session.finalText.trim());
+                }
+            };
+
+            activeRecognitionSession = session;
+            try { recognition.start(); } catch (err) { console.warn(err); }
+            return session;
+        }
+
         const SECRET_ADMIN_PHRASE = "hallo admin";
         function normalizeForPhraseMatch(txt) {
             return (txt || "").toLowerCase().replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim();
@@ -1378,35 +1484,30 @@
                 triggerToast("ต้องเปิดผ่าน HTTPS เท่านั้นถึงจะใช้ไมโครโฟนได้ ลองแตะโลโก้รัว ๆ 5 ครั้งแทน", "warning");
                 return;
             }
-            const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognitionCtor) {
+            if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) {
                 triggerToast("เบราว์เซอร์นี้ไม่รองรับเสียง ลองแตะโลโก้รัว ๆ 5 ครั้งแทน", "warning");
                 return;
             }
-            const recognition = new SpeechRecognitionCtor();
-            recognition.lang = "en-US";
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 3;
-            triggerToast("🎤 กำลังฟัง... พูดคำสั่งได้เลย", "success");
-            recognition.onresult = (e) => {
-                for (let i = 0; i < e.results[0].length; i++) {
-                    const heard = normalizeForPhraseMatch(e.results[0][i].transcript);
-                    if (heard.includes(SECRET_ADMIN_PHRASE) || heard.includes("hello admin") || heard.includes("halo admin")) {
+            triggerToast("🎤 กำลังฟัง... พูดคำสั่งได้เลย (ฟังต่อเนื่องแม้มีจังหวะเงียบ)", "success");
+            startResilientRecognition({
+                lang: 'en-US',
+                maxDurationMs: 12000,
+                onUpdate: (finalText, interimText) => {
+                    const combined = normalizeForPhraseMatch(finalText + ' ' + interimText);
+                    if (combined.includes(SECRET_ADMIN_PHRASE) || combined.includes("hello admin") || combined.includes("halo admin")) {
+                        stopActiveRecognitionSession();
                         tryAccessAdmin();
-                        return;
                     }
-                }
-            };
-            recognition.onerror = (e) => {
-                console.warn("speech recognition error:", e.error);
-                if (e.error === 'not-allowed' || e.error === 'permission-denied') {
-                    triggerToast("แอปนี้ไม่อนุญาตให้ใช้ไมค์ (มักเกิดถ้าเปิดผ่านเบราว์เซอร์ในแอปแชท) — ลองเปิดผ่าน Chrome/Safari โดยตรง หรือแตะโลโก้รัว ๆ 5 ครั้งแทน", "warning");
-                } else if (e.error === 'no-speech') {
-                    triggerToast("ไม่ได้ยินเสียงพูด กรุณาลองใหม่", "warning");
-                }
-            };
-            try { recognition.start(); } catch (err) { console.warn(err); }
+                },
+                onError: (type) => {
+                    if (type === 'permission') {
+                        triggerToast("แอปนี้ไม่อนุญาตให้ใช้ไมค์ (มักเกิดถ้าเปิดผ่านเบราว์เซอร์ในแอปแชท) — ลองเปิดผ่าน Chrome/Safari โดยตรง หรือแตะโลโก้รัว ๆ 5 ครั้งแทน", "warning");
+                    } else {
+                        triggerToast("เบราว์เซอร์นี้ไม่รองรับเสียง ลองแตะโลโก้รัว ๆ 5 ครั้งแทน", "warning");
+                    }
+                },
+                onDone: () => {}
+            });
         }
         (function setupSecretAdminLogoGestures() {
             const logoEl = document.getElementById('secretLogoTrigger');
@@ -2602,40 +2703,86 @@
             savePphDataDebounced();
         }
 
+        // ===================== PPH VOICE ENTRY (resilient, continuous) =====================
+        let pphVoiceMatchedAnything = false;
+        let pphVoiceLastProcessedText = '';
+
+        function togglePphVoiceEntry() {
+            if (isRecognitionSessionActive()) {
+                stopActiveRecognitionSession();
+                setPphVoiceUiListening(false);
+                triggerToast("หยุดฟังแล้ว", "success");
+                return;
+            }
+            startPphVoiceEntry();
+        }
+
+        function setPphVoiceUiListening(isListening) {
+            const btn = document.getElementById('pphVoiceBtn');
+            const label = document.getElementById('pphVoiceBtnLabel');
+            const caption = document.getElementById('pphVoiceCaption');
+            if (btn) btn.classList.toggle('voice-listening-active', isListening);
+            if (label) label.textContent = isListening
+                ? 'กำลังฟัง... แตะเพื่อหยุด'
+                : 'พูดเพื่อบันทึกเวลา (เช่น "T05 F 09 30 D 10 40")';
+            if (caption) {
+                caption.classList.toggle('show', isListening);
+                if (!isListening) caption.textContent = '';
+            }
+        }
+
         function startPphVoiceEntry() {
             if (!window.isSecureContext) {
                 triggerToast("ต้องเปิดผ่าน HTTPS เท่านั้นถึงจะใช้ไมโครโฟนได้", "warning");
                 return;
             }
-            const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognitionCtor) {
+            if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) {
                 triggerToast("เบราว์เซอร์นี้ไม่รองรับการพูดเพื่อบันทึกเวลา", "warning");
                 return;
             }
-            const recognition = new SpeechRecognitionCtor();
-            recognition.lang = "th-TH";
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-            triggerToast('🎤 กำลังฟัง... พูดเช่น "T05 F 09 30 D 10 40"', "success");
-            recognition.onresult = (e) => {
-                const transcript = e.results[0][0].transcript || "";
-                applyPphVoiceCommand(transcript);
-            };
-            recognition.onerror = (e) => {
-                console.warn("PPH voice recognition error:", e.error);
-                if (e.error === 'not-allowed' || e.error === 'permission-denied') {
-                    triggerToast("ไม่ได้รับอนุญาตให้ใช้ไมโครโฟน กรุณาอนุญาตแล้วลองใหม่", "danger");
-                } else if (e.error === 'no-speech') {
-                    triggerToast("ไม่ได้ยินเสียงพูด กรุณาลองใหม่", "warning");
-                } else {
-                    triggerToast("ฟังเสียงไม่สำเร็จ กรุณาลองใหม่", "danger");
+            pphVoiceMatchedAnything = false;
+            pphVoiceLastProcessedText = '';
+            setPphVoiceUiListening(true);
+            triggerToast('🎤 กำลังฟัง... พูดเช่น "T05 F 09 30 D 10 40" (พูดค้างได้ ระบบฟังต่อเนื่องเอง)', "success");
+
+            startResilientRecognition({
+                lang: 'th-TH',
+                maxDurationMs: 20000,
+                onUpdate: (finalText, interimText) => {
+                    const caption = document.getElementById('pphVoiceCaption');
+                    if (caption) caption.textContent = (finalText + ' ' + interimText).trim() || '...';
+                    if (finalText && finalText !== pphVoiceLastProcessedText) {
+                        pphVoiceLastProcessedText = finalText;
+                        const applied = applyPphVoiceCommand(finalText, true);
+                        if (applied) pphVoiceMatchedAnything = true;
+                    }
+                },
+                onError: (type) => {
+                    setPphVoiceUiListening(false);
+                    if (type === 'permission') {
+                        triggerToast("ไม่ได้รับอนุญาตให้ใช้ไมโครโฟน กรุณาอนุญาตแล้วลองใหม่", "danger");
+                    } else {
+                        triggerToast("เบราว์เซอร์นี้ไม่รองรับการพูดเพื่อบันทึกเวลา", "warning");
+                    }
+                },
+                onDone: (finalText) => {
+                    setPphVoiceUiListening(false);
+                    if (finalText && finalText !== pphVoiceLastProcessedText) {
+                        const applied = applyPphVoiceCommand(finalText, true);
+                        if (applied) pphVoiceMatchedAnything = true;
+                    }
+                    if (!pphVoiceMatchedAnything) {
+                        triggerToast(`ไม่เข้าใจคำสั่งเสียง กรุณาลองพูดใหม่ เช่น "T05 F 09 30 D 10 40"`, "warning");
+                    } else {
+                        triggerToast("หยุดฟังแล้ว ✅ บันทึกข้อมูลที่พูดเรียบร้อย", "success");
+                    }
                 }
-            };
-            try { recognition.start(); } catch (err) { console.warn(err); }
+            });
         }
 
-        function applyPphVoiceCommand(rawTranscript) {
+        // ปรับ: คืนค่า true/false ว่าพบคำสั่งที่ใช้ได้หรือไม่ และรับพารามิเตอร์ silentNoMatch
+        // เพื่อไม่ให้ toast แจ้ง "ไม่เข้าใจ" ทุกครั้งที่มีข้อความบางส่วน (interim) ระหว่างฟังต่อเนื่อง
+        function applyPphVoiceCommand(rawTranscript, silentNoMatch) {
             const norm = (rawTranscript || "").toLowerCase();
 
             const inboundMatch = norm.match(/(?:inbound|ขาเข้า)\D{0,4}(\d{1,2})\D{0,3}(\d{2})/);
@@ -2648,9 +2795,11 @@
 
             if (inboundMatch) {
                 const t = `${inboundMatch[1].padStart(2,'0')}:${inboundMatch[2]}`;
-                pphData.inbound_time = t;
-                document.getElementById('pphInboundTimeLabel').textContent = t;
-                feedbackParts.push(`Inbound ${t}`);
+                if (pphData.inbound_time !== t) {
+                    pphData.inbound_time = t;
+                    document.getElementById('pphInboundTimeLabel').textContent = t;
+                    feedbackParts.push(`Inbound ${t}`);
+                }
                 appliedSomething = true;
             }
 
@@ -2662,19 +2811,19 @@
                     return digitsInId != null && parseInt(digitsInId) === suffixNum;
                 });
                 if (!matched) {
-                    triggerToast(`ไม่พบคนขับที่รหัสลงท้าย ${courierMatch[1]} ในรายชื่อเช็คอินวันนี้`, "danger");
+                    if (!silentNoMatch) {
+                        triggerToast(`ไม่พบคนขับที่รหัสลงท้าย ${courierMatch[1]} ในรายชื่อเช็คอินวันนี้`, "danger");
+                    }
                 } else {
                     if (!pphData.route_log[matched.courier_id]) pphData.route_log[matched.courier_id] = { fs: null, dep: null };
                     const rec = pphData.route_log[matched.courier_id];
                     if (fsMatch) {
                         const t = `${fsMatch[1].padStart(2,'0')}:${fsMatch[2]}`;
-                        rec.fs = t;
-                        feedbackParts.push(`${matched.courier_id} FS ${t}`);
+                        if (rec.fs !== t) { rec.fs = t; feedbackParts.push(`${matched.courier_id} FS ${t}`); }
                     }
                     if (depMatch) {
                         const t = `${depMatch[1].padStart(2,'0')}:${depMatch[2]}`;
-                        rec.dep = t;
-                        feedbackParts.push(`${matched.courier_id} DEP ${t}`);
+                        if (rec.dep !== t) { rec.dep = t; feedbackParts.push(`${matched.courier_id} DEP ${t}`); }
                     }
                     appliedSomething = true;
                     renderPphRouteCourierList();
@@ -2684,10 +2833,14 @@
             if (appliedSomething) {
                 computeAndRenderPph();
                 savePphDataDebounced();
-                triggerToast(`✅ บันทึกแล้ว: ${feedbackParts.join(' • ')}`, "success");
-            } else {
+                if (feedbackParts.length > 0) {
+                    triggerToast(`✅ บันทึกแล้ว: ${feedbackParts.join(' • ')}`, "success");
+                }
+                return true;
+            } else if (!silentNoMatch) {
                 triggerToast(`ไม่เข้าใจคำสั่งเสียง: "${rawTranscript}" ลองพูดเช่น "T05 F 09 30 D 10 40"`, "warning");
             }
+            return false;
         }
 
         function computeAndRenderPph() {
@@ -2835,6 +2988,8 @@
                     datasets: [{ data: [stats.ontime, stats.late, stats.notYet], backgroundColor: ['#38a169', '#e53e3e', '#cbd5e1'], borderWidth: 0 }]
                 },
                 options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
                     cutout: '68%'
                 }
@@ -2856,7 +3011,12 @@
             dashLineChartInstance = new Chart(canvas, {
                 type: 'line',
                 data: { labels, datasets: [{ label: 'Ontime %', data: pctValues, borderColor: '#D40511', backgroundColor: 'rgba(212,5,17,0.08)', fill: true, tension: 0.3, pointRadius: 3 }] },
-                options: { scales: { y: { min: 0, max: 100, ticks: { stepSize: 25 } } }, plugins: { legend: { display: false } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { min: 0, max: 100, ticks: { stepSize: 25 } } },
+                    plugins: { legend: { display: false } }
+                }
             });
         }
 
