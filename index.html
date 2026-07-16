@@ -87,8 +87,6 @@
         .tab-btn.active { color: var(--dhl-red); background: #fff1f1; }
         .tab-btn.active i { transform: translateY(-1px) scale(1.08); }
 
-        /* Each tab gets its own accent color so the bar reads as colourful even
-           before a tab is active, not just plain grey icons. */
         #btnCheckinMode i { color: var(--dhl-red); }
         #btnUserMode i { color: #2563eb; }
         #btnPPHMode i { color: var(--warning); }
@@ -101,7 +99,6 @@
         #btnDashboardMode.active { color: #8b5cf6; background: #f5f3ff; }
         #btnAdminMode.active { color: var(--dhl-dark); background: #f1f5f9; }
 
-        /* Small colour dot under each icon for extra pop, hidden until active */
         .tab-btn::after {
             content: ""; position: absolute; top: 4px; right: calc(50% - 20px);
             width: 6px; height: 6px; border-radius: 50%; background: currentColor;
@@ -211,13 +208,11 @@
         .location-status-box.ok { background: #ecfdf5; color: #065f46; }
         .location-status-box.fail { background: #fef2f2; color: #991b1b; }
 
-        /* Pre-checkin checklist (uniform / KTB bag) */
         .checklist-box { margin-top: 12px; background: var(--light-gray); border-radius: 6px; padding: 10px; border: 1px dashed #cbd5e1; }
         .checklist-item { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; padding: 6px 2px; cursor: pointer; }
         .checklist-item input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--dhl-red); }
         .checklist-note { font-size: 10.5px; color: var(--dhl-grey); font-weight: 400; margin-top: 2px; }
 
-        /* KTB bag has/doesn't-have toggle */
         .ktb-toggle-row { padding: 6px 2px; }
         .ktb-toggle-label { font-size: 12px; font-weight: 600; margin-bottom: 6px; display: block; }
         .ktb-toggle-group { display: flex; gap: 8px; }
@@ -352,7 +347,6 @@
         .status-fail-mini { background: #fee2e2; color: #991b1b; font-size: 10px; padding: 2px 6px; }
         .status-warn-mini { background: #ffedd5; color: #9a3412; font-size: 10px; padding: 2px 6px; }
 
-        /* Email report card */
         .report-card { background: var(--white); border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); border-top: 4px solid var(--dhl-dark); }
         .report-card .section-title-form { margin-bottom: 10px; }
         .report-btn-row { display: flex; gap: 8px; }
@@ -511,7 +505,7 @@
         <div class="app-container">
 
             <div id="checkinModuleSection" style="display:flex; flex-direction:column; gap:12px;">
-                <div class="checkin-hero">
+                <div class="checkin-hero" id="secretCenterTapTrigger">
                     <div class="checkin-clock" id="liveClock">--:--:--</div>
                     <div class="checkin-date-label" id="liveDateLabel">-</div>
                 </div>
@@ -1009,8 +1003,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script>
         // ===================== CONFIG =====================
         const SB_URL = "https://kubkriophojmqlnnoins.supabase.co";
@@ -1022,10 +1016,6 @@
         };
 
         // ===================== REALTIME =====================
-        // ฟังการเปลี่ยนแปลงของตาราง attendance_checkins แบบสด ๆ ผ่าน Supabase Realtime
-        // เพื่อให้กราฟ/ตัวเลขในหน้า Dashboard อัปเดตทันทีเมื่อมีคนเช็คอิน
-        // (จำเป็นต้องรัน SQL: alter publication supabase_realtime add table public.attendance_checkins;
-        //  ใน Supabase ก่อน ไม่งั้นจะไม่มีอีเวนต์ส่งเข้ามาเลย)
         let sbRealtimeClient = null;
         function initRealtimeSubscription() {
             if (!window.supabase || !window.supabase.createClient) {
@@ -1389,12 +1379,6 @@
         });
 
         // ===================== RESILIENT SPEECH RECOGNITION =====================
-        // Mobile browsers auto-stop SpeechRecognition after a short pause in speech,
-        // which used to cut users off mid-sentence ("พูดได้ครึ่งเดียว"). This wrapper
-        // keeps a single session alive by automatically restarting recognition every
-        // time it ends (unless the caller/user stopped it on purpose or a max duration
-        // is reached), and accumulates all final transcript chunks across restarts so
-        // nothing spoken gets lost even if the underlying engine restarts several times.
         let activeRecognitionSession = null;
 
         function stopActiveRecognitionSession() {
@@ -1448,9 +1432,6 @@
                     session.manualStop = true;
                     config.onError && config.onError('permission');
                 }
-                // For 'no-speech' / 'network' / 'aborted' we deliberately do nothing here
-                // and let the 'onend' handler decide whether to restart, since 'onend'
-                // always fires right after 'onerror' for these cases.
             };
 
             recognition.onend = () => {
@@ -1481,14 +1462,14 @@
         }
         function startSecretVoiceListen() {
             if (!window.isSecureContext) {
-                triggerToast("ต้องเปิดผ่าน HTTPS เท่านั้นถึงจะใช้ไมโครโฟนได้ ลองแตะโลโก้รัว ๆ 5 ครั้งแทน", "warning");
+                triggerToast("ต้องเปิดผ่าน HTTPS เท่านั้นถึงจะใช้ไมโครโฟนได้ ลองแตะกลางจอรัว ๆ 3 ครั้งแทน", "warning");
                 return;
             }
             if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) {
-                triggerToast("เบราว์เซอร์นี้ไม่รองรับเสียง ลองแตะโลโก้รัว ๆ 5 ครั้งแทน", "warning");
+                triggerToast("เบราว์เซอร์นี้ไม่รองรับเสียง ลองแตะกลางจอรัว ๆ 3 ครั้งแทน", "warning");
                 return;
             }
-            triggerToast("🎤 กำลังฟัง... พูดคำสั่งได้เลย (ฟังต่อเนื่องแม้มีจังหวะเงียบ)", "success");
+            triggerToast("🎤 กำลังฟัง... พูดว่า \"Hallo Admin\" เพื่อเข้าสู่หน้ารหัสผ่าน", "success");
             startResilientRecognition({
                 lang: 'en-US',
                 maxDurationMs: 12000,
@@ -1501,42 +1482,59 @@
                 },
                 onError: (type) => {
                     if (type === 'permission') {
-                        triggerToast("แอปนี้ไม่อนุญาตให้ใช้ไมค์ (มักเกิดถ้าเปิดผ่านเบราว์เซอร์ในแอปแชท) — ลองเปิดผ่าน Chrome/Safari โดยตรง หรือแตะโลโก้รัว ๆ 5 ครั้งแทน", "warning");
+                        triggerToast("แอปนี้ไม่อนุญาตให้ใช้ไมค์ (มักเกิดถ้าเปิดผ่านเบราว์เซอร์ในแอปแชท) — ลองเปิดผ่าน Chrome/Safari โดยตรง หรือแตะกลางจอรัว ๆ 3 ครั้งแทน", "warning");
                     } else {
-                        triggerToast("เบราว์เซอร์นี้ไม่รองรับเสียง ลองแตะโลโก้รัว ๆ 5 ครั้งแทน", "warning");
+                        triggerToast("เบราว์เซอร์นี้ไม่รองรับเสียง ลองแตะกลางจอรัว ๆ 3 ครั้งแทน", "warning");
                     }
                 },
                 onDone: () => {}
             });
         }
-        (function setupSecretAdminLogoGestures() {
+
+        // === Secret admin gesture: tap the center of the screen (the clock hero
+        // card) 3 times in a row, then say "Hallo Admin" out loud. Reaching the 3rd
+        // tap automatically starts listening for the phrase -- it no longer opens
+        // the PIN screen by itself, so BOTH steps (3 taps AND the spoken phrase) are
+        // required together, matching how the feature is meant to work. ===
+        (function setupSecretAdminGestures() {
+            const centerTapEl = document.getElementById('secretCenterTapTrigger');
             const logoEl = document.getElementById('secretLogoTrigger');
-            if (!logoEl) return;
-
-            let pressTimer = null;
-            const LONG_PRESS_MS = 550;
-            const startPress = () => { pressTimer = setTimeout(startSecretVoiceListen, LONG_PRESS_MS); };
-            const cancelPress = () => { clearTimeout(pressTimer); };
-            logoEl.addEventListener('touchstart', startPress, { passive: true });
-            logoEl.addEventListener('touchend', cancelPress);
-            logoEl.addEventListener('touchcancel', cancelPress);
-            logoEl.addEventListener('mousedown', startPress);
-            logoEl.addEventListener('mouseup', cancelPress);
-            logoEl.addEventListener('mouseleave', cancelPress);
-
+            const TAP_TARGET = 3;
+            const TAP_WINDOW_MS = 3000;
             let tapCount = 0;
             let tapResetTimer = null;
-            const TAP_TARGET = 5;
-            const TAP_WINDOW_MS = 3000;
-            logoEl.addEventListener('click', () => {
+
+            function registerSecretTap() {
                 tapCount++;
                 clearTimeout(tapResetTimer);
                 tapResetTimer = setTimeout(() => { tapCount = 0; }, TAP_WINDOW_MS);
                 if (tapCount >= TAP_TARGET) {
                     tapCount = 0;
                     clearTimeout(tapResetTimer);
-                    tryAccessAdmin();
+                    triggerToast(`👆 แตะครบ ${TAP_TARGET} ครั้งแล้ว — พูดว่า "Hallo Admin" ตอนนี้เลย`, "success");
+                    startSecretVoiceListen();
                 }
+            }
+
+            if (centerTapEl) centerTapEl.addEventListener('click', registerSecretTap);
+            // Keep the logo as a secondary (backward compatible) trigger for the
+            // same 3-tap + voice flow.
+            if (logoEl) logoEl.addEventListener('click', registerSecretTap);
+
+            // Long-press either area also jumps straight to voice listening, as a
+            // convenience shortcut that skips the tap counting.
+            let pressTimer = null;
+            const LONG_PRESS_MS = 550;
+            const startPress = () => { pressTimer = setTimeout(startSecretVoiceListen, LONG_PRESS_MS); };
+            const cancelPress = () => { clearTimeout(pressTimer); };
+            [centerTapEl, logoEl].forEach(el => {
+                if (!el) return;
+                el.addEventListener('touchstart', startPress, { passive: true });
+                el.addEventListener('touchend', cancelPress);
+                el.addEventListener('touchcancel', cancelPress);
+                el.addEventListener('mousedown', startPress);
+                el.addEventListener('mouseup', cancelPress);
+                el.addEventListener('mouseleave', cancelPress);
             });
         })();
 
@@ -1930,7 +1928,6 @@
             if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
         }
 
-        // ปรับขนาดรูปให้เล็กลงก่อนเก็บลงฐานข้อมูล (base64 ใน text column) เพื่อไม่ให้ payload ใหญ่เกินไป
         function resizeImageDataUrl(sourceCanvas, maxDim, quality) {
             const srcW = sourceCanvas.width, srcH = sourceCanvas.height;
             let outW = srcW, outH = srcH;
@@ -2022,8 +2019,6 @@
                 triggerToast("เช็คอินสำเร็จ", "success");
             } catch (err) {
                 console.error(err);
-                // ถ้าตาราง attendance_checkins ยังไม่มีคอลัมน์ photo_data ให้ลองบันทึกใหม่แบบไม่มีรูป
-                // เพื่อไม่ให้การเช็คอินล้มเหลวทั้งหมดเพียงเพราะยังไม่ได้เพิ่มคอลัมน์
                 try {
                     await sbInsertAttendance({
                         courier_id: currentCourier.id,
@@ -2190,10 +2185,6 @@
             downloadCsv(csv, `attendance_report_${todayStr()}.csv`);
         }
 
-        // ===================== ADMIN: DAILY EMAIL SUMMARY REPORT =====================
-        // Plain-text version: used for the "preview" fallback rendering and for the
-        // mailto: link (mailto bodies are ALWAYS plain text -- mail apps do not render
-        // HTML typed into a mailto body, so this stays plain text on purpose).
         function buildDailySummaryText(dateStr) {
             const s = dateStr.split('-');
             const leaveToday = onlineDatabaseRecords.filter(r => r.leave_date === dateStr);
@@ -2226,19 +2217,12 @@
             return msg;
         }
 
-        // Escapes text before dropping it into an HTML email so names/reasons typed by
-        // employees can never break the layout or inject markup.
         function escapeHtmlForEmail(str) {
             return (str == null ? '' : String(str))
                 .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;');
         }
 
-        // HTML / styled version of the same report: a proper DHL-branded card with real
-        // tables so the report looks the same in the email as it does in-app, instead of
-        // a single unbroken line of text (which is what plain-text bodies collapse into
-        // inside most HTML email clients). Used by the EmailJS auto-send path via the
-        // {{{message_html}}} template variable, and shown in the on-screen preview.
         function buildDailySummaryHtml(dateStr) {
             const s = dateStr.split('-');
             const thDate = `${s[2]}/${s[1]}/${s[0]}`;
@@ -2337,9 +2321,6 @@
             const dateField = document.getElementById('reportDate');
             const dateStr = dateField.value || todayStr();
             const previewBox = document.getElementById('reportPreviewBox');
-            // Render the actual styled HTML report in the preview so what the admin sees
-            // here is what the recipient will see in their inbox (once their EmailJS
-            // template uses {{{message_html}}}), instead of a flat plain-text dump.
             previewBox.style.whiteSpace = 'normal';
             previewBox.innerHTML = buildDailySummaryHtml(dateStr);
             previewBox.classList.add('show');
@@ -2385,10 +2366,6 @@
                 const summaryText = buildDailySummaryText(dateStr);
                 const summaryHtml = buildDailySummaryHtml(dateStr);
 
-                // Send BOTH a plain-text fallback (message) and a styled HTML version
-                // (message_html). In the EmailJS Email Template editor, use
-                // {{{message_html}}} (triple braces = "don't escape") so the table/colour
-                // layout actually renders instead of showing as one long line of text.
                 await emailjs.send(REPORT_CONFIG.serviceId, REPORT_CONFIG.templateId, {
                     to_email: toEmail,
                     subject: `สรุปรายงาน DHL ประจำวันที่ ${dateStr}`,
@@ -2577,8 +2554,6 @@
             }, 600);
         }
 
-        // เรียกใช้ก่อนออกจากแท็บ PPH เพื่อบันทึกทันที ไม่ต้องรอ debounce 0.6 วินาที
-        // ป้องกันข้อมูลหายเวลาสลับแท็บเร็วหลังกดปุ่มเวลา
         async function flushPphSaveIfPending() {
             if (pphLastSavedSnapshot === JSON.stringify(pphData)) return;
             clearTimeout(pphSaveDebounceTimer);
@@ -2772,7 +2747,7 @@
                         if (applied) pphVoiceMatchedAnything = true;
                     }
                     if (!pphVoiceMatchedAnything) {
-                        triggerToast(`ไม่เข้าใจคำสั่งเสียง กรุณาลองพูดใหม่ เช่น "T05 F 09 30 D 10 40"`, "warning");
+                        triggerToast(`ไม่เข้าใจคำสั่งเสียง กรุณาลองพูดใหม่ เช่น "T05 F 09 30 D 10 40" (พูดคำว่า "ที" "เอฟ" "ดี" ให้ชัด เว้นจังหวะสั้น ๆ ก่อนตัวเลข)`, "warning");
                     } else {
                         triggerToast("หยุดฟังแล้ว ✅ บันทึกข้อมูลที่พูดเรียบร้อย", "success");
                     }
@@ -2780,12 +2755,19 @@
             });
         }
 
-        // ปรับ: คืนค่า true/false ว่าพบคำสั่งที่ใช้ได้หรือไม่ และรับพารามิเตอร์ silentNoMatch
-        // เพื่อไม่ให้ toast แจ้ง "ไม่เข้าใจ" ทุกครั้งที่มีข้อความบางส่วน (interim) ระหว่างฟังต่อเนื่อง
-        function applyPphVoiceCommand(rawTranscript, silentNoMatch) {
-            const norm = (rawTranscript || "").toLowerCase();
+        function normalizePphVoiceText(rawTranscript) {
+            let norm = (rawTranscript || "").toLowerCase();
+            norm = norm.replace(/ที่|ที/g, ' t ');
+            norm = norm.replace(/ดี้|ดี/g, ' d ');
+            norm = norm.replace(/เอฟ/g, ' f ');
+            norm = norm.replace(/เข้า|ขาเข้า/g, ' inbound ');
+            return norm;
+        }
 
-            const inboundMatch = norm.match(/(?:inbound|ขาเข้า)\D{0,4}(\d{1,2})\D{0,3}(\d{2})/);
+        function applyPphVoiceCommand(rawTranscript, silentNoMatch) {
+            const norm = normalizePphVoiceText(rawTranscript);
+
+            const inboundMatch = norm.match(/(?:inbound)\D{0,4}(\d{1,2})\D{0,3}(\d{2})/);
             const courierMatch = norm.match(/(?:^|[^a-z0-9])t\D{0,2}(\d{1,3})/);
             const fsMatch = norm.match(/(?:^|[^a-z0-9])f\D{0,3}(\d{1,2})\D{0,3}(\d{2})/);
             const depMatch = norm.match(/(?:^|[^a-z0-9])d\D{0,3}(\d{1,2})\D{0,3}(\d{2})/);
@@ -2931,22 +2913,32 @@
             return { ontime, late, total, notYet, ontimePct };
         }
 
-        // ถ้า Chart.js โหลดจาก CDN ไม่สำเร็จ (เน็ตช้า/ถูกบล็อก) จะพยายามโหลดซ้ำอัตโนมัติ
-        // แทนที่จะปล่อยให้กราฟว่างเปล่าแบบเงียบ ๆ โดยไม่มีข้อความแจ้งเตือนเลย
         let chartJsRetryInFlight = null;
+        function loadScriptOnce(src) {
+            return new Promise((resolve) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = () => resolve(true);
+                script.onerror = () => resolve(false);
+                document.head.appendChild(script);
+            });
+        }
         function ensureChartJsLoaded() {
             if (window.Chart) return Promise.resolve(true);
             if (chartJsRetryInFlight) return chartJsRetryInFlight;
-            chartJsRetryInFlight = new Promise((resolve) => {
-                const script = document.createElement('script');
-                script.src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js";
-                script.onload = () => resolve(true);
-                script.onerror = () => {
-                    console.warn("โหลด Chart.js ไม่สำเร็จ (เช็คอินเทอร์เน็ต/ตัวบล็อกโฆษณา) — กราฟจะไม่แสดง");
-                    resolve(false);
-                };
-                document.head.appendChild(script);
-            });
+            chartJsRetryInFlight = (async () => {
+                const cdnUrls = [
+                    "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js",
+                    "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"
+                ];
+                for (const url of cdnUrls) {
+                    const ok = await loadScriptOnce(url);
+                    if (ok && window.Chart) return true;
+                }
+                console.warn("โหลด Chart.js ไม่สำเร็จจากทุก CDN (เช็คอินเทอร์เน็ต/ตัวบล็อกโฆษณา) — กราฟจะไม่แสดง");
+                triggerToast("โหลดกราฟไม่สำเร็จ (เครือข่ายอาจบล็อก CDN) — ตัวเลขสถิติยังใช้งานได้ปกติ", "warning");
+                return false;
+            })();
             return chartJsRetryInFlight;
         }
 
@@ -3056,7 +3048,6 @@
             });
         }
 
-        // ===== Dashboard: PPH Summary card (pulls saved pph_daily row for the selected date) =====
         async function renderDashboardPphSummary(dateStr) {
             let row = null;
             try { row = await sbSelectPphDaily(dateStr); } catch (err) { console.warn("renderDashboardPphSummary error:", err); }
@@ -3074,7 +3065,6 @@
             document.getElementById('dashPphMetaLine').innerHTML =
                 `Parcels <b>${totalParcels}</b> (ใหม่ ${newParcels} + เก่า ${oldParcels}) • Staff <b>${staff}</b> / Sorter <b>${sorter}</b> / Courier <b>${courierCount}</b>`;
 
-            // Sort time PPH
             const sortBox = document.getElementById('dashPphSortBox');
             const sortValueEl = document.getElementById('dashPphSortValue');
             const sortDetailEl = document.getElementById('dashPphSortDetail');
@@ -3099,7 +3089,6 @@
                 sortDetailEl.textContent = `Inbound ${inboundTime} → Avg FS ${minutesToTimeStr(avgFsMin)} • Man-hours ${manHours.toFixed(1)} • คนรวม ${totalHeadcount}`;
             }
 
-            // Route prep PPH
             const routeBox = document.getElementById('dashPphRouteBox');
             const routeValueEl = document.getElementById('dashPphRouteValue');
             const routeDetailEl = document.getElementById('dashPphRouteDetail');
@@ -3126,7 +3115,6 @@
             }
         }
 
-        // ===== Dashboard: Check-in Photos gallery for the selected date =====
         function renderDashboardPhotoGallery(dateStr) {
             const grid = document.getElementById('dashPhotoGallery');
             const countsEl = document.getElementById('dashPhotoCounts');
