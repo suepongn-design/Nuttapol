@@ -22,13 +22,55 @@
             --warning: #dd6b20;
             --light-gray: #f7fafc;
             --border-gray: #edf2f7;
+            --bg-body: #faf8f2;
+            --hero-grad-1: #1a202c;
+            --hero-grad-2: #2d3748;
+            --tab-active-bg: #fff1f1;
+            --accent-tint-bg: #fffdf5;
+            --accent-tint-border: #fef3c7;
         }
+
+        /* ===== DHL THEME VARIANTS (color moods, all within the DHL yellow/red family) ===== */
+        body.theme-sunset {
+            --dhl-yellow: #FFB300;
+            --dhl-yellow-deep: #E09900;
+            --dhl-red: #E0472A;
+            --bg-body: #fff6ee;
+            --hero-grad-1: #3a1220;
+            --hero-grad-2: #6b2418;
+            --tab-active-bg: #fff0e6;
+            --accent-tint-bg: #fff8ec;
+            --accent-tint-border: #fde3c4;
+        }
+        body.theme-ocean {
+            --dhl-yellow: #FFCC00;
+            --dhl-yellow-deep: #E6B800;
+            --dhl-red: #0B6FD1;
+            --bg-body: #f3f8fd;
+            --hero-grad-1: #061a2e;
+            --hero-grad-2: #0f3a63;
+            --tab-active-bg: #e8f2ff;
+            --accent-tint-bg: #f2f9ff;
+            --accent-tint-border: #cfe8ff;
+        }
+        body.theme-midnight {
+            --dhl-yellow: #FFD84D;
+            --dhl-yellow-deep: #E0B93E;
+            --dhl-red: #E23B57;
+            --bg-body: #10131a;
+            --hero-grad-1: #000000;
+            --hero-grad-2: #191d26;
+            --tab-active-bg: #2b2110;
+            --accent-tint-bg: #201a10;
+            --accent-tint-border: #3a2f18;
+        }
+        .theme-swatch { width:22px; height:22px; border-radius:50%; display:block; border:1.5px solid rgba(0,0,0,0.08); flex-shrink:0; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.5); }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Kanit', 'Poppins', sans-serif;
-            background-color: #faf8f2;
+            background-color: var(--bg-body);
             color: var(--dhl-dark);
             min-height: 100vh;
             display: flex;
@@ -53,8 +95,8 @@
         }
         .logo-group { display: flex; align-items: center; gap: 10px; width: 100%; }
         .dhl-brand-block {
-            background-color: var(--dhl-yellow);
-            color: var(--dhl-red);
+            background-color: #FFCC00;
+            color: #D40511;
             font-family: 'Poppins', sans-serif;
             font-size: 20px;
             font-weight: 900;
@@ -62,9 +104,11 @@
             border-radius: 4px;
             letter-spacing: -1px;
         }
-        .title-text-group { display: flex; flex-direction: column; border-left: 2px solid #e2e8f0; padding-left: 10px; }
+        .title-text-group { display: flex; flex-direction: column; border-left: 2px solid #e2e8f0; padding-left: 10px; flex:1; min-width:0; }
         .main-title-long { font-size: 13px; font-weight: 700; color: var(--dhl-dark); line-height: 1.2; }
         .sub-title-long { font-size: 10px; color: var(--dhl-grey); margin-top: 1px; }
+        .header-gear-btn { background:none; border:none; cursor:pointer; color:var(--dhl-grey); font-size:19px; padding:6px 8px; flex-shrink:0; }
+        .header-gear-btn:active { color: var(--dhl-dark); }
 
         /* ===== BOTTOM TAB BAR (replaces old top mode switcher) ===== */
         .bottom-tab-bar {
@@ -72,32 +116,36 @@
             background: var(--white);
             border-top: 1px solid #e2e8f0;
             box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
-            padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px));
+            padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
         }
-        .bottom-tab-inner { display: flex; justify-content: space-around; align-items: stretch; max-width: 600px; margin: 0 auto; gap: 4px; }
+        .bottom-tab-inner { display: flex; justify-content: space-around; align-items: stretch; max-width: 640px; margin: 0 auto; gap: 2px; overflow-x:auto; }
         .tab-btn {
             flex: 1; background: none; border: none; cursor: pointer;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 3px; padding: 6px 4px; border-radius: 10px; font-family: inherit;
-            color: var(--dhl-grey); transition: all 0.15s ease; min-height: 52px;
+            gap: 3px; padding: 6px 2px; border-radius: 10px; font-family: inherit;
+            color: var(--dhl-grey); transition: all 0.15s ease; min-height: 52px; min-width: 46px;
             position: relative;
         }
-        .tab-btn i { font-size: 18px; transition: transform 0.15s ease, color 0.15s ease; }
-        .tab-btn span { font-size: 10.5px; font-weight: 600; }
-        .tab-btn.active { color: var(--dhl-red); background: #fff1f1; }
+        .tab-btn i { font-size: 16px; transition: transform 0.15s ease, color 0.15s ease; }
+        .tab-btn span { font-size: 9.5px; font-weight: 600; white-space:nowrap; }
+        .tab-btn.active { color: var(--dhl-red); background: var(--tab-active-bg); }
         .tab-btn.active i { transform: translateY(-1px) scale(1.08); }
 
-        #btnCheckinMode i { color: var(--dhl-red); }
-        #btnUserMode i { color: #2563eb; }
-        #btnPPHMode i { color: var(--warning); }
-        #btnDashboardMode i { color: #8b5cf6; }
-        #btnAdminMode i { color: #475569; }
+        #btnCheckinTab i { color: var(--dhl-red); }
+        #btnPDTab i { color: #7c3aed; }
+        #btnPPHTab i { color: var(--warning); }
+        #btnFirstDelTab i { color: #0891b2; }
+        #btnDashboardTab i { color: #8b5cf6; }
+        #btnHistoryTab i { color: #2563eb; }
+        #btnManageTab i { color: #475569; }
 
-        #btnCheckinMode.active { color: var(--dhl-red); background: #fff1f1; }
-        #btnUserMode.active { color: #2563eb; background: #eff6ff; }
-        #btnPPHMode.active { color: var(--warning); background: #fff7ed; }
-        #btnDashboardMode.active { color: #8b5cf6; background: #f5f3ff; }
-        #btnAdminMode.active { color: var(--dhl-dark); background: #f1f5f9; }
+        #btnCheckinTab.active { color: var(--dhl-red); background: var(--tab-active-bg); }
+        #btnPDTab.active { color: #7c3aed; background: #f5f3ff; }
+        #btnPPHTab.active { color: var(--warning); background: #fff7ed; }
+        #btnFirstDelTab.active { color: #0891b2; background: #ecfeff; }
+        #btnDashboardTab.active { color: #8b5cf6; background: #f5f3ff; }
+        #btnHistoryTab.active { color: #2563eb; background: #eff6ff; }
+        #btnManageTab.active { color: var(--dhl-dark); background: #f1f5f9; }
 
         .tab-btn::after {
             content: ""; position: absolute; top: 4px; right: calc(50% - 20px);
@@ -105,6 +153,12 @@
             opacity: 0; transform: scale(0.4); transition: all 0.15s ease;
         }
         .tab-btn.active::after { opacity: 1; transform: scale(1); }
+        .tab-num-badge {
+            position:absolute; top:2px; left:calc(50% - 20px); width:14px; height:14px; border-radius:50%;
+            background:var(--dhl-dark); color:#fff; font-size:8px; font-weight:800;
+            display:flex; align-items:center; justify-content:center;
+        }
+        .tab-btn.active .tab-num-badge { background: currentColor; color:#fff; }
 
         .main-content { flex: 1; width: 100%; padding-bottom: 92px; }
         .app-container { width: 100%; max-width: 600px; margin: 0 auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; overflow-x: hidden; }
@@ -119,7 +173,7 @@
         .month-selector-bar select { padding: 6px 12px; font-family: inherit; font-size: 13px; font-weight: 600; border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; outline: none; }
         .year-label { font-size: 12px; font-weight: 700; color: var(--dhl-red); }
 
-        .legend-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 14px; margin-bottom: 12px; font-size: 11px; background: #fffdf5; padding: 10px 12px; border-radius: 8px; border: 1px solid #fef3c7; }
+        .legend-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 14px; margin-bottom: 12px; font-size: 11px; background: var(--accent-tint-bg); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--accent-tint-border); }
         .legend-box { display: flex; align-items: center; gap: 7px; color: #57534e; font-weight: 500; }
         .color-indicator { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid #e2e8f0; }
 
@@ -171,13 +225,33 @@
         .ghost-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* ===== CHECK-IN MODULE ===== */
-        .checkin-hero { background: linear-gradient(160deg, #1a202c 0%, #2d3748 100%); border-radius: 12px; padding: 18px 16px; text-align: center; box-shadow: 0 4px 14px rgba(26,32,44,0.25); border-bottom: 3px solid var(--dhl-yellow); }
+        .checkin-hero { background: linear-gradient(160deg, var(--hero-grad-1) 0%, var(--hero-grad-2) 100%); border-radius: 12px; padding: 18px 16px; text-align: center; box-shadow: 0 4px 14px rgba(26,32,44,0.25); border-bottom: 3px solid var(--dhl-yellow); }
         .checkin-clock {
             font-family: 'Poppins', sans-serif; font-size: 32px; font-weight: 700;
             color: var(--white); letter-spacing: 2px;
             font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1;
         }
         .checkin-date-label { font-size: 11.5px; color: var(--dhl-yellow); font-weight: 600; margin-top: 4px; }
+
+        /* ===== TIMELINE STATUS BAR (day-progress across check-in/PD/IB/departure/first-del) ===== */
+        .timeline-card { background: var(--white); border-radius: 10px; padding: 14px 10px 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); overflow-x:auto; }
+        .timeline-row { display:flex; align-items:flex-start; min-width: 520px; }
+        .timeline-step { flex:1; display:flex; flex-direction:column; align-items:center; position:relative; text-align:center; }
+        .timeline-step .tl-dot {
+            width:26px; height:26px; border-radius:50%; background:#e2e8f0; color:#94a3b8;
+            display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;
+            border:2px solid #fff; box-shadow:0 0 0 2px #e2e8f0; z-index:2;
+        }
+        .timeline-step.done .tl-dot { background: var(--success); color:#fff; box-shadow:0 0 0 2px var(--success); }
+        .timeline-step.late .tl-dot { background: var(--danger); color:#fff; box-shadow:0 0 0 2px var(--danger); }
+        .timeline-step .tl-line {
+            position:absolute; top:13px; left:-50%; width:100%; height:2px; background:#e2e8f0; z-index:1;
+        }
+        .timeline-step:first-child .tl-line { display:none; }
+        .timeline-step.done .tl-line, .timeline-step.late .tl-line { background: var(--success); }
+        .timeline-step .tl-label { font-size:9.5px; color:var(--dhl-grey); font-weight:700; margin-top:5px; white-space:nowrap; }
+        .timeline-step .tl-time { font-size:10px; color:var(--dhl-dark); font-weight:700; margin-top:1px; white-space:nowrap; }
+        .timeline-step .tl-time.tl-warn { color: var(--danger); }
 
         .step-box { background: var(--white); border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         .step-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
@@ -234,7 +308,7 @@
 
         .success-checkin-box {
             display: none; text-align: center; padding: 0; overflow: hidden;
-            background: linear-gradient(160deg, #1a202c 0%, #262f40 100%); border-radius: 12px;
+            background: linear-gradient(160deg, var(--hero-grad-1) 0%, var(--hero-grad-2) 100%); border-radius: 12px;
             box-shadow: 0 4px 14px rgba(26,32,44,0.2);
         }
         .success-checkin-box.show { display: block; }
@@ -353,6 +427,8 @@
         .report-note { font-size: 10.5px; color: var(--dhl-grey); margin-top: 8px; line-height: 1.6; }
         .report-preview-box { margin-top: 10px; background: var(--light-gray); border-radius: 6px; padding: 10px; font-size: 11px; white-space: pre-wrap; color: #334155; display: none; max-height: 220px; overflow-y: auto; border: 1px dashed #cbd5e1; }
         .report-preview-box.show { display: block; }
+        .report-summary-chip-row { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+        .report-summary-chip { font-size:10.5px; font-weight:700; padding:4px 9px; border-radius:12px; background:#f1f5f9; color:#475569; }
 
         /* MODALS */
         .pin-modal-overlay {
@@ -420,7 +496,7 @@
         .pph-summary-box.pass .pph-sum-value { color: var(--success); }
         .pph-summary-box.fail .pph-sum-value { color: var(--warning); }
         .pph-summary-box .pph-sum-detail { font-size: 10px; color: #718096; margin-top: 4px; line-height: 1.5; }
-        .pph-meta-line { font-size: 11px; color: #4a5568; margin-top: 8px; background: #fffdf5; border: 1px solid #fef3c7; border-radius: 6px; padding: 8px 10px; }
+        .pph-meta-line { font-size: 11px; color: #4a5568; margin-top: 8px; background: var(--accent-tint-bg); border: 1px solid var(--accent-tint-border); border-radius: 6px; padding: 8px 10px; }
 
         .photo-gallery-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
         .photo-gallery-counts { font-size: 11px; color: var(--dhl-grey); }
@@ -458,11 +534,49 @@
             min-height: 16px; display: none;
         }
         .voice-live-caption.show { display: block; }
+        .voice-retry-note { font-size:10px; color:#b45309; background:#fffbeb; border:1px dashed #fde68a; border-radius:6px; padding:5px 8px; margin-top:6px; display:none; }
+        .voice-retry-note.show { display:block; }
+
+        /* ===== PD (Performance Dialog) MODULE ===== */
+        .pd-camera-shell { max-width: 340px; margin: 0 auto; }
+        .pd-preview-actions { display:flex; gap:8px; margin-top:10px; max-width:340px; margin-left:auto; margin-right:auto; }
+        .pd-status-photo { width:64px; height:64px; border-radius:10px; object-fit:cover; border:2px solid var(--dhl-yellow); flex-shrink:0; }
+        .pd-status-row { display:flex; align-items:center; gap:12px; }
+        .pd-status-body { flex:1; min-width:0; }
+        .pd-window-badge { font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:10px; }
+        .pd-window-badge.ok { background:#d1fae5; color:#065f46; }
+        .pd-window-badge.late { background:#ffedd5; color:#9a3412; }
+        .pd-window-badge.closed { background:#fee2e2; color:#991b1b; }
+
+        /* ===== FIRST DEL MODULE ===== */
+        .fd-search-box { margin-bottom: 8px; }
+        .fd-list-item { background: var(--light-gray); border-radius: 10px; padding: 12px 14px; border-left: 4px solid #cbd5e1; }
+        .fd-list-top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+        .fd-list-name { font-size:13px; font-weight:700; }
+        .fd-list-meta { font-size:10.5px; color:var(--dhl-grey); margin-top:2px; }
+        .fd-time-row { display:flex; gap:8px; margin-top:8px; align-items:center; }
+        .fd-time-row input { flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:5px; font-family:inherit; font-size:14px; }
+        .fd-stem-tag { font-size:10.5px; font-weight:800; padding:4px 9px; border-radius:10px; white-space:nowrap; }
+        .fd-stem-tag.ok { background:#d1fae5; color:#065f46; }
+        .fd-stem-tag.late { background:#fee2e2; color:#991b1b; }
+        .fd-stem-tag.pending { background:#e2e8f0; color:#64748b; }
+
+        /* ===== BOOK-STYLE SWIPE (PD <-> PPH) ===== */
+        .book-swipe-wrap { position:relative; overflow:hidden; }
+        .book-swipe-hint { text-align:center; font-size:10.5px; color:var(--dhl-grey); margin-top:6px; display:flex; align-items:center; justify-content:center; gap:14px; }
+        .book-swipe-hint span { display:flex; align-items:center; gap:4px; }
+
+        /* ===== SETTINGS MODAL ===== */
+        .settings-lang-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top:6px; }
+        .lang-opt-btn { border:2px solid #cbd5e1; background:#fff; border-radius:8px; padding:12px 8px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; color:#4a5568; }
+        .lang-opt-btn .flag-emoji { font-size:20px; }
+        .lang-opt-btn.active { border-color: var(--dhl-red); background:var(--tab-active-bg); color:var(--dhl-red); }
+        .theme-opt-btn.active .theme-swatch { box-shadow: inset 0 0 0 2px rgba(255,255,255,0.5), 0 0 0 3px var(--dhl-red); }
 
         @media (max-width: 380px) {
             .main-title-long { font-size: 12px; }
             .sub-title-long { font-size: 9px; }
-            .tab-btn span { font-size: 9.5px; }
+            .tab-btn span { font-size: 8.5px; }
             .checkin-clock { font-size: 27px; letter-spacing: 1px; }
         }
     </style>
@@ -474,29 +588,42 @@
             <div class="logo-group" id="secretLogoTrigger">
                 <div class="dhl-brand-block">DHL</div>
                 <div class="title-text-group">
-                    <div class="main-title-long" id="headerTitleText">ระบบลางาน &amp; เช็คอินเข้างาน (Smart Leave &amp; Check-in)</div>
-                    <div class="sub-title-long">Operational Resource Planning Portal</div>
+                    <div class="main-title-long" id="headerTitleText" data-i18n="app_title">ระบบลางาน &amp; เช็คอินเข้างาน (Smart Leave &amp; Check-in)</div>
+                    <div class="sub-title-long" data-i18n="app_subtitle">Operational Resource Planning Portal</div>
                 </div>
+                <button type="button" class="header-gear-btn" id="openSettingsBtn" onclick="openSettingsModal(event)" title="Settings">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
             </div>
         </header>
     </div>
 
     <nav class="bottom-tab-bar">
         <div class="bottom-tab-inner">
-            <button class="tab-btn active" id="btnCheckinMode" onclick="switchMode('checkin')">
-                <i class="fa-solid fa-clock"></i><span>เช็คอิน</span>
+            <button class="tab-btn active" id="btnCheckinTab" onclick="switchMainTab('checkin')">
+                <span class="tab-num-badge">1</span>
+                <i class="fa-solid fa-clock"></i><span data-i18n="tab_checkin">เช็คอิน</span>
             </button>
-            <button class="tab-btn" id="btnUserMode" onclick="switchMode('user')">
-                <i class="fa-regular fa-calendar"></i><span>ลางาน</span>
+            <button class="tab-btn" id="btnPDTab" style="display:none;" onclick="switchMainTab('pd')">
+                <span class="tab-num-badge">2</span>
+                <i class="fa-solid fa-camera-retro"></i><span data-i18n="tab_pd">PD</span>
             </button>
-            <button class="tab-btn" id="btnPPHMode" onclick="switchAdminTab('pph')" style="display:none;">
-                <i class="fa-solid fa-box"></i><span>PPH</span>
+            <button class="tab-btn" id="btnPPHTab" style="display:none;" onclick="switchMainTab('pph')">
+                <span class="tab-num-badge">3</span>
+                <i class="fa-solid fa-box"></i><span data-i18n="tab_pph">PPH</span>
             </button>
-            <button class="tab-btn" id="btnDashboardMode" onclick="switchAdminTab('dashboard')" style="display:none;">
-                <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+            <button class="tab-btn" id="btnFirstDelTab" style="display:none;" onclick="switchMainTab('firstdel')">
+                <span class="tab-num-badge">4</span>
+                <i class="fa-solid fa-truck-fast"></i><span data-i18n="tab_firstdel">First Del</span>
             </button>
-            <button class="tab-btn" id="btnAdminMode" onclick="tryAccessAdmin()" style="display:none;">
-                <i class="fa-solid fa-shield-halved"></i><span>ผู้ดูแล</span>
+            <button class="tab-btn" id="btnDashboardTab" style="display:none;" onclick="switchMainTab('dashboard')">
+                <i class="fa-solid fa-chart-simple"></i><span data-i18n="tab_dashboard">Dashboard</span>
+            </button>
+            <button class="tab-btn" id="btnHistoryTab" onclick="switchMainTab('history')">
+                <i class="fa-regular fa-calendar"></i><span data-i18n="tab_history">ลางาน</span>
+            </button>
+            <button class="tab-btn" id="btnManageTab" style="display:none;" onclick="switchMainTab('manage')">
+                <i class="fa-solid fa-user-shield"></i><span data-i18n="tab_manage">จัดการ</span>
             </button>
         </div>
     </nav>
@@ -504,17 +631,22 @@
     <div class="main-content">
         <div class="app-container">
 
+            <!-- =========== TAB 1: CHECK-IN =========== -->
             <div id="checkinModuleSection" style="display:flex; flex-direction:column; gap:12px;">
                 <div class="checkin-hero" id="secretCenterTapTrigger">
                     <div class="checkin-clock" id="liveClock">--:--:--</div>
                     <div class="checkin-date-label" id="liveDateLabel">-</div>
                 </div>
 
+                <div class="timeline-card" id="dayTimelineCard">
+                    <div class="timeline-row" id="dayTimelineRow"></div>
+                </div>
+
                 <div class="step-box">
-                    <div class="step-title"><span class="step-num-badge">1</span> กรอก Courier ID</div>
+                    <div class="step-title"><span class="step-num-badge">1</span> <span data-i18n="step1_title">กรอก Courier ID</span></div>
                     <div class="courier-id-input-row">
-                        <input type="text" id="checkinCourierId" class="form-input" placeholder="เช่น: BPET05" onkeydown="if(event.key==='Enter'){event.preventDefault();lookupCourierId();}">
-                        <button type="button" class="btn-secondary-yellow" onclick="lookupCourierId()">ตรวจสอบ</button>
+                        <input type="text" id="checkinCourierId" class="form-input" placeholder="เช่น: BPET05 หรือ T05" onkeydown="if(event.key==='Enter'){event.preventDefault();lookupCourierId();}">
+                        <button type="button" class="btn-secondary-yellow" onclick="lookupCourierId()" data-i18n="btn_check">ตรวจสอบ</button>
                     </div>
                     <div class="courier-profile-card" id="courierProfileCard">
                         <div class="courier-avatar" id="courierAvatarInit">?</div>
@@ -533,30 +665,38 @@
                 </div>
 
                 <div class="step-box" id="cameraStepBox" style="display:none;">
-                    <div class="step-title"><span class="step-num-badge">2</span> ตรวจสอบความพร้อมก่อนเช็คอิน</div>
+                    <div class="step-title"><span class="step-num-badge">2</span> <span data-i18n="step2_title">ตรวจสอบความพร้อมก่อนเช็คอิน</span></div>
 
                     <div class="checklist-box" id="checklistBox">
-                        <label class="checklist-item">
-                            <input type="checkbox" id="chkUniform" onchange="updateChecklistState()">
-                            แต่งกายถูกต้องตามยูนิฟอร์มบริษัท (ยูนิฟอร์ม)
-                        </label>
-
                         <div class="ktb-toggle-row">
+                            <span class="ktb-toggle-label" data-i18n="uniform_label">การแต่งกาย</span>
+                            <div class="ktb-toggle-group">
+                                <button type="button" class="ktb-toggle-btn" id="btnUniformOk" onclick="selectUniformStatus(true)">
+                                    <i class="fa-solid fa-shirt"></i> <span data-i18n="uniform_ok">ถูกต้อง</span>
+                                </button>
+                                <button type="button" class="ktb-toggle-btn" id="btnUniformBad" onclick="selectUniformStatus(false)">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> <span data-i18n="uniform_bad">ไม่ถูกต้อง</span>
+                                </button>
+                            </div>
+                            <div class="checklist-note" style="margin-top:4px;">ถูกต้อง = เสื้อบริษัท + กางเกงสีดำ/กางเกงบริษัท + รองเท้าสีดำ<br>ไม่ถูกต้อง = แต่งกายไม่ตรงตามที่บริษัทกำหนด</div>
+                        </div>
+
+                        <div class="ktb-toggle-row" style="margin-top:10px;">
                             <span class="ktb-toggle-label">กระเป๋า KTB</span>
                             <div class="ktb-toggle-group">
                                 <button type="button" class="ktb-toggle-btn" id="btnKtbHas" onclick="selectKtbBag(true)">
-                                    <i class="fa-solid fa-bag-shopping"></i> มี
+                                    <i class="fa-solid fa-bag-shopping"></i> <span data-i18n="ktb_has">มี</span>
                                 </button>
                                 <button type="button" class="ktb-toggle-btn" id="btnKtbNone" onclick="selectKtbBag(false)">
-                                    <i class="fa-solid fa-ban"></i> ไม่มี
+                                    <i class="fa-solid fa-ban"></i> <span data-i18n="ktb_none">ไม่มี</span>
                                 </button>
                             </div>
                         </div>
 
-                        <div class="checklist-note">* ต้องติ๊กยูนิฟอร์ม และเลือกสถานะกระเป๋า KTB (มี/ไม่มี) ก่อน จึงจะสามารถถ่ายภาพเพื่อเช็คอินได้</div>
+                        <div class="checklist-note">* ต้องเลือกการแต่งกาย และเลือกสถานะกระเป๋า KTB (มี/ไม่มี) ก่อน จึงจะสามารถถ่ายภาพเพื่อเช็คอินได้</div>
                     </div>
 
-                    <div class="step-title" style="margin-top:14px;"><span class="step-num-badge">3</span> สแกนใบหน้ายืนยันตัวตนเพื่อเช็คอิน</div>
+                    <div class="step-title" style="margin-top:14px;"><span class="step-num-badge">3</span> <span data-i18n="step3_title">สแกนใบหน้ายืนยันตัวตนเพื่อเช็คอิน</span></div>
                     <div class="camera-wrap" id="cameraWrap">
                         <div class="camera-frame">
                             <video id="cameraVideo" autoplay playsinline muted></video>
@@ -564,8 +704,8 @@
                         </div>
                     </div>
                     <div class="camera-btn-row">
-                        <button type="button" class="ghost-btn" id="openCameraBtn" onclick="openCamera()">เปิดกล้อง</button>
-                        <button type="button" class="submit-btn" id="captureBtn" style="display:none;" onclick="captureAndCheckin()" disabled>ถ่ายภาพและเช็คอิน</button>
+                        <button type="button" class="ghost-btn" id="openCameraBtn" onclick="openCamera()" data-i18n="btn_open_camera">เปิดกล้อง</button>
+                        <button type="button" class="submit-btn" id="captureBtn" style="display:none;" onclick="captureAndCheckin()" disabled data-i18n="btn_capture_checkin">ถ่ายภาพและเช็คอิน</button>
                     </div>
                 </div>
 
@@ -579,39 +719,101 @@
                     <div class="success-checkin-time" id="successCheckinTime">07:00:00</div>
                     <div class="receipt-divider"></div>
                     <div class="success-checklist-summary" id="successChecklistSummary"></div>
-                    <button type="button" class="ghost-btn" onclick="resetCheckinFlow()">เช็คอินรายการถัดไป</button>
+                    <button type="button" class="ghost-btn" onclick="resetCheckinFlow()" data-i18n="btn_next_checkin">เช็คอินรายการถัดไป</button>
                 </div>
             </div>
 
+            <!-- =========== TAB 2 & 3 book-swipe wrap: PD <-> PPH =========== -->
+            <div id="pdPphBookWrap" class="book-swipe-wrap" style="display:none;">
+
+                <!-- PD PAGE -->
+                <div id="pdModuleSection" style="display:flex; flex-direction:column; gap:12px;">
+                    <div class="rules-card" style="border-top-color:#7c3aed;">
+                        <h4><i class="fa-solid fa-camera-retro" style="color:#7c3aed;"></i> <span data-i18n="pd_title">PD Performance Dialog</span> <span id="pdWindowRangeLabel" style="font-weight:400;font-size:11px;color:var(--dhl-grey);">(07:00–07:15)</span></h4>
+                        <div style="font-size:11px; color:#4a5568; margin-top:4px;" data-i18n="pd_desc">ถ่ายภาพหมู่การประชุมเช้า — บังคับกล้องสด แนวนอนเท่านั้น • ระบบ Stamp ชื่อสาขาให้อัตโนมัติ</div>
+                    </div>
+
+                    <div class="step-box" id="pdCameraBox">
+                        <div class="step-title"><i class="fa-solid fa-camera" style="color:#7c3aed;"></i> <span data-i18n="pd_capture_title">ถ่ายภาพ PD วันนี้</span></div>
+                        <div class="pd-camera-shell">
+                            <div class="camera-frame" style="aspect-ratio:16/9;">
+                                <video id="pdCameraVideo" autoplay playsinline muted></video>
+                                <canvas id="pdCameraCanvas"></canvas>
+                                <img id="pdPreviewImg" style="display:none;" alt="PD preview">
+                            </div>
+                        </div>
+                        <div class="pd-preview-actions">
+                            <button type="button" class="ghost-btn" id="pdOpenCameraBtn" onclick="openPdCamera()" data-i18n="btn_open_camera">เปิดกล้อง</button>
+                            <button type="button" class="submit-btn" id="pdCaptureBtn" style="display:none; background:#7c3aed;" onclick="capturePdPhoto()" data-i18n="pd_btn_capture">ถ่ายภาพ</button>
+                        </div>
+                        <div class="pd-preview-actions" id="pdConfirmRow" style="display:none;">
+                            <button type="button" class="ghost-btn" onclick="retakePdPhoto()"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="pd_btn_retake">ถ่ายใหม่</span></button>
+                            <button type="button" class="submit-btn" style="background:#7c3aed;" onclick="confirmSavePdPhoto()"><i class="fa-solid fa-check"></i> <span data-i18n="pd_btn_confirm">ยืนยันบันทึก</span></button>
+                        </div>
+                    </div>
+
+                    <div class="step-box">
+                        <div class="step-title"><i class="fa-solid fa-image-portrait" style="color:#7c3aed;"></i> <span data-i18n="pd_status_title">สถานะ PD วันนี้</span></div>
+                        <div id="pdTodayStatusBox">
+                            <div class="empty-state-note" data-i18n="pd_no_photo_yet">ยังไม่มีการถ่ายภาพ PD วันนี้</div>
+                        </div>
+                    </div>
+
+                    <div class="book-swipe-hint">
+                        <span><i class="fa-solid fa-arrow-left"></i> <span data-i18n="swipe_to_pph">ปัดซ้ายไปหน้า PPH</span></span>
+                    </div>
+                </div>
+
+                <!-- PPH PAGE (existing content, moved inline as its own book page) -->
+                <div id="pphStandaloneSection" style="display:none; flex-direction:column; gap:12px;">
+                    <div class="book-swipe-hint" style="margin-bottom:2px;">
+                        <span><i class="fa-solid fa-arrow-right"></i> <span data-i18n="swipe_to_pd">ปัดขวากลับหน้า PD</span></span>
+                    </div>
+                    <div id="pphContentMount"></div>
+                </div>
+
+            </div>
+
+            <!-- =========== TAB 4: FIRST DEL =========== -->
+            <div id="firstDelModuleSection" style="display:none; flex-direction:column; gap:12px;">
+                <div class="rules-card" style="border-top-color:#0891b2;">
+                    <h4><i class="fa-solid fa-truck-fast" style="color:#0891b2;"></i> <span data-i18n="fd_title">First Delivery</span> <span style="font-weight:400;font-size:11px;color:var(--dhl-grey);" data-i18n="fd_target">(Target ก่อน 09:00)</span></h4>
+                    <div style="font-size:11px; color:#4a5568; margin-top:4px;" data-i18n="fd_desc">Stem Out = จับเวลาตั้งแต่ Departure (จากขั้น PPH Route prep) → First Del • กด First Del เพื่อบันทึกเวลา (แก้ไข/ล้างได้)</div>
+                </div>
+                <input type="text" id="fdSearchBox" class="form-input fd-search-box" placeholder="ค้นหาชื่อ / รหัส / Vendor..." oninput="renderFirstDelList()">
+                <div class="record-list" id="firstDelList"></div>
+            </div>
+
+            <!-- =========== TAB "History" (leave request submission + calendar) =========== -->
             <div id="leaveModuleSection" style="display:none;">
                 <div class="rules-card" id="rulesCard">
-                    <h4><i class="fa-solid fa-triangle-exclamation" style="color: var(--dhl-red)"></i> กฎเหล็กการลางาน</h4>
+                    <h4><i class="fa-solid fa-triangle-exclamation" style="color: var(--dhl-red)"></i> <span data-i18n="rules_title">กฎเหล็กการลางาน</span></h4>
                     <ul class="rules-grid">
-                        <li><b>อังคาร - พฤหัสบดี ต้องได้รับอนุมัติ:</b> ช่วงกลางสัปดาห์พัสดุหนาแน่น ต้องผ่านการอนุมัติจากหัวหน้างานเท่านั้น</li>
-                        <li><b>ช่วงโปรโมชั่น ต้องได้รับอนุมัติ:</b> แคมเปญดับเบิ้ลเดทประจำเดือน 7 วันทำการ (ไม่รวมวันอาทิตย์) ต้องผ่านหัวหน้างาน</li>
-                        <li><b>ห้ามลาซ้อนกัน:</b> ใน 1 วัน ปฏิทินอนุมัติสูงสุดเพียง <b>1 คน</b> เท่านั้น</li>
-                        <li><b>ข้อมูลหมดอายุอัตโนมัติ:</b> เมื่อพ้นวันที่ลาไปแล้ว รายการจะถูกซ่อนออกจากปฏิทินและคิวอนุมัติโดยอัตโนมัติ (ยังดึงเป็นรายงานย้อนหลังได้ที่หน้า Admin)</li>
+                        <li data-i18n="rule_1"><b>อังคาร - พฤหัสบดี ต้องได้รับอนุมัติ:</b> ช่วงกลางสัปดาห์พัสดุหนาแน่น ต้องผ่านการอนุมัติจากหัวหน้างานเท่านั้น</li>
+                        <li data-i18n="rule_2"><b>ช่วงโปรโมชั่น ต้องได้รับอนุมัติ:</b> แคมเปญดับเบิ้ลเดทประจำเดือน 7 วันทำการ (ไม่รวมวันอาทิตย์) ต้องผ่านหัวหน้างาน</li>
+                        <li data-i18n="rule_3"><b>ห้ามลาซ้อนกัน:</b> ใน 1 วัน ปฏิทินอนุมัติสูงสุดเพียง <b>1 คน</b> เท่านั้น</li>
+                        <li data-i18n="rule_4"><b>ข้อมูลหมดอายุอัตโนมัติ:</b> เมื่อพ้นวันที่ลาไปแล้ว รายการจะถูกซ่อนออกจากปฏิทินและคิวอนุมัติโดยอัตโนมัติ (ยังดึงเป็นรายงานย้อนหลังได้ที่หน้าจัดการ)</li>
                     </ul>
                 </div>
 
                 <div class="calendar-section" id="calendarSection">
                     <div class="month-selector-bar">
                         <select id="monthSelect" onchange="renderCalendar()">
-                            <option value="0">มกราคม</option><option value="1">กุมภาพันธ์</option>
-                            <option value="2">มีนาคม</option><option value="3">เมษายน</option>
-                            <option value="4">พฤษภาคม</option><option value="5">มิถุนายน</option>
-                            <option value="6">กรกฎาคม</option><option value="7">สิงหาคม</option>
-                            <option value="8">กันยายน</option><option value="9">ตุลาคม</option>
-                            <option value="10">พฤศจิกายน</option><option value="11">ธันวาคม</option>
+                            <option value="0" data-i18n="month_0">มกราคม</option><option value="1" data-i18n="month_1">กุมภาพันธ์</option>
+                            <option value="2" data-i18n="month_2">มีนาคม</option><option value="3" data-i18n="month_3">เมษายน</option>
+                            <option value="4" data-i18n="month_4">พฤษภาคม</option><option value="5" data-i18n="month_5">มิถุนายน</option>
+                            <option value="6" data-i18n="month_6">กรกฎาคม</option><option value="7" data-i18n="month_7">สิงหาคม</option>
+                            <option value="8" data-i18n="month_8">กันยายน</option><option value="9" data-i18n="month_9">ตุลาคม</option>
+                            <option value="10" data-i18n="month_10">พฤศจิกายน</option><option value="11" data-i18n="month_11">ธันวาคม</option>
                         </select>
-                        <div class="year-label">ปีปฏิทิน 2026 (พ.ศ. 2569)</div>
+                        <div class="year-label" data-i18n="calendar_year_label">ปีปฏิทิน 2026 (พ.ศ. 2569)</div>
                     </div>
                     <div class="legend-row">
-                        <div class="legend-box"><div class="color-indicator" style="background:#fff;"></div> ว่าง</div>
-                        <div class="legend-box"><div class="color-indicator" style="background:#fff5f5;"></div> ต้องอนุมัติ (อ.-พฤ.)</div>
-                        <div class="legend-box"><div class="color-indicator" style="background:#fffbeb;"></div> แคมเปญ (ต้องอนุมัติ)</div>
-                        <div class="legend-box"><div class="color-indicator" style="background:#fffdf0; border-color:var(--dhl-yellow)"></div> วันหยุด</div>
-                        <div class="legend-box"><div class="color-indicator" style="background:#e2e8f0;"></div> เต็มแล้ว</div>
+                        <div class="legend-box"><div class="color-indicator" style="background:#fff;"></div> <span data-i18n="legend_free">ว่าง</span></div>
+                        <div class="legend-box"><div class="color-indicator" style="background:#fff5f5;"></div> <span data-i18n="legend_needs_approval">ต้องอนุมัติ (อ.-พฤ.)</span></div>
+                        <div class="legend-box"><div class="color-indicator" style="background:#fffbeb;"></div> <span data-i18n="legend_campaign">แคมเปญ (ต้องอนุมัติ)</span></div>
+                        <div class="legend-box"><div class="color-indicator" style="background:#fffdf0; border-color:var(--dhl-yellow)"></div> <span data-i18n="legend_holiday">วันหยุด</span></div>
+                        <div class="legend-box"><div class="color-indicator" style="background:#e2e8f0;"></div> <span data-i18n="legend_full">เต็มแล้ว</span></div>
                     </div>
                     <div class="calendar-grid" id="gridBox"></div>
                     <div class="detail-info-box" id="detailInfoBox"></div>
@@ -620,45 +822,53 @@
                 <div class="form-section" id="formSection">
                     <div class="section-title-form">
                         <i class="fa-solid fa-file-lines" style="color: var(--dhl-red);"></i>
-                        <span>กรอกข้อมูลยื่นคำขอ</span>
+                        <span data-i18n="leave_form_title">กรอกข้อมูลยื่นคำขอ</span>
                     </div>
                     <form id="requestForm" onsubmit="handleFormSubmit(event)">
                         <div class="input-group">
-                            <label>ชื่อ-นามสกุลพนักงาน * (เฉพาะชื่อ ไม่เอานามสกุล)</label>
-                            <input type="text" id="inputName" class="form-input" placeholder="เช่น: สมชาย" required>
+                            <label data-i18n="leave_name_label">ชื่อ-นามสกุลพนักงาน * (เฉพาะชื่อ ไม่เอานามสกุล)</label>
+                            <input type="text" id="inputName" class="form-input" placeholder="เช่น: สมชาย" data-i18n-placeholder="leave_name_placeholder" required>
                         </div>
                         <div class="input-group">
-                            <label>รหัสพนักงาน *</label>
-                            <input type="text" id="inputId" class="form-input" placeholder="เช่น: DHL-1043" required>
+                            <label data-i18n="leave_id_label">รหัสพนักงาน *</label>
+                            <input type="text" id="inputId" class="form-input" placeholder="เช่น: DHL-1043" data-i18n-placeholder="leave_id_placeholder" required>
                         </div>
                         <div class="input-group">
-                            <label>วันที่คุณเลือกขอลางาน:</label>
+                            <label data-i18n="leave_date_label">วันที่คุณเลือกขอลางาน:</label>
                             <div class="chips-container" id="chipsBox">
                                 <span style="color:var(--dhl-grey); font-size:11px;">กรุณาคลิกเลือกวันที่ว่างบนปฏิทิน...</span>
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>เหตุผลความจำเป็นล่วงหน้า *</label>
-                            <textarea id="inputReason" class="form-input" rows="2" style="resize:none;" placeholder="ระบุเหตุผลความจำเป็น..." required></textarea>
+                            <label data-i18n="leave_reason_label">เหตุผลความจำเป็นล่วงหน้า *</label>
+                            <textarea id="inputReason" class="form-input" rows="2" style="resize:none;" placeholder="ระบุเหตุผลความจำเป็น..." data-i18n-placeholder="leave_reason_placeholder" required></textarea>
                         </div>
-                        <button type="submit" class="submit-btn">ส่งข้อมูลเข้าฐานระบบ</button>
+                        <button type="submit" class="submit-btn" data-i18n="btn_submit_leave">ส่งข้อมูลเข้าฐานระบบ</button>
                     </form>
                 </div>
             </div>
 
+            <!-- =========== TAB "Manage" (admin) =========== -->
             <div class="admin-panel" id="adminSection">
 
+                <div id="adminGateBox" class="step-box" style="text-align:center;">
+                    <i class="fa-solid fa-lock" style="font-size:22px; color:var(--dhl-grey); margin-bottom:8px;"></i>
+                    <div style="font-size:12.5px; color:#4a5568; margin-bottom:10px;" data-i18n="manage_locked_desc">ส่วนนี้สำหรับหัวหน้างานเท่านั้น กรุณายืนยันรหัสผ่านเพื่อเข้าใช้งาน</div>
+                    <button type="button" class="submit-btn" onclick="tryAccessAdmin()" data-i18n="manage_unlock_btn">ปลดล็อกด้วยรหัสผ่าน</button>
+                </div>
+
+                <div id="adminUnlockedBox" style="display:none; flex-direction:column; gap:12px;">
                 <button type="button" class="ghost-btn" style="border-color:var(--dhl-red); color:var(--dhl-red);" onclick="adminLogout()">
-                    <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบผู้ดูแล (กลับหน้าเช็คอิน)
+                    <i class="fa-solid fa-right-from-bracket"></i> <span data-i18n="manage_logout_btn">ออกจากระบบผู้ดูแล</span>
                 </button>
 
                 <div class="admin-stat-row">
                     <div class="admin-stat-card pending">
-                        <div class="admin-stat-label">รออนุมัติ</div>
+                        <div class="admin-stat-label" data-i18n="stat_pending">รออนุมัติ</div>
                         <div class="admin-stat-value" id="statPendingCount">0</div>
                     </div>
                     <div class="admin-stat-card approved">
-                        <div class="admin-stat-label">อนุมัติวันนี้</div>
+                        <div class="admin-stat-label" data-i18n="stat_approved_today">อนุมัติวันนี้</div>
                         <div class="admin-stat-value" id="statApprovedTodayCount">0</div>
                     </div>
                 </div>
@@ -666,23 +876,24 @@
                 <div class="report-card">
                     <div class="section-title-form">
                         <i class="fa-solid fa-envelope" style="color: var(--dhl-dark);"></i>
-                        <span>ส่งสรุปรายงานประจำวันเข้าอีเมล (ใครลา / ใครสาย)</span>
+                        <span data-i18n="report_title">ส่งสรุปรายงานประจำวันเข้าอีเมล (ใครลา / ใครสาย / PD / First Del)</span>
                     </div>
                     <div class="input-group">
-                        <label>เลือกวันที่ต้องการสรุป</label>
+                        <label data-i18n="report_date_label">เลือกวันที่ต้องการสรุป</label>
                         <input type="date" id="reportDate" class="form-input">
                     </div>
                     <div class="input-group">
-                        <label>อีเมลผู้รับ (คั่นด้วยเครื่องหมายจุลภาคหากมีหลายคน)</label>
-                        <input type="email" id="reportEmail" class="form-input" placeholder="เช่น: supervisor@company.com">
+                        <label data-i18n="report_email_label">อีเมลผู้รับ (คั่นด้วยเครื่องหมายจุลภาคหากมีหลายคน)</label>
+                        <input type="email" id="reportEmail" class="form-input" placeholder="เช่น: supervisor@company.com" data-i18n-placeholder="report_email_placeholder">
                     </div>
-                    <div class="report-btn-row">
-                        <button type="button" class="ghost-btn" onclick="previewDailyReport()"><i class="fa-solid fa-eye"></i> ดูตัวอย่างสรุป</button>
-                        <button type="button" class="submit-btn" id="sendReportBtn" onclick="sendDailyEmailReport()"><i class="fa-solid fa-paper-plane"></i> ส่งเข้าอีเมล</button>
+                    <div class="report-summary-chip-row" id="reportSummaryChips"></div>
+                    <div class="report-btn-row" style="margin-top:10px;">
+                        <button type="button" class="ghost-btn" onclick="previewDailyReport()"><i class="fa-solid fa-eye"></i> <span data-i18n="report_preview_btn">ดูตัวอย่างสรุป</span></button>
+                        <button type="button" class="submit-btn" id="sendReportBtn" onclick="sendDailyEmailReport()"><i class="fa-solid fa-paper-plane"></i> <span data-i18n="report_send_btn">ส่งเข้าอีเมล</span></button>
                     </div>
-                    <button type="button" class="ghost-btn" style="margin-top:8px;" onclick="openMailtoReport()"><i class="fa-solid fa-envelope-open-text"></i> เปิดแอปอีเมลของฉัน (ใช้ได้ทันที ไม่ต้องตั้งค่า)</button>
+                    <button type="button" class="ghost-btn" style="margin-top:8px;" onclick="openMailtoReport()"><i class="fa-solid fa-envelope-open-text"></i> <span data-i18n="report_mailto_btn">เปิดแอปอีเมลของฉัน (ใช้ได้ทันที ไม่ต้องตั้งค่า)</span></button>
                     <div class="report-preview-box" id="reportPreviewBox"></div>
-                    <div class="report-note">
+                    <div class="report-note" data-i18n="report_note_html">
                         ปุ่ม <b>"เปิดแอปอีเมลของฉัน"</b> ใช้งานได้ทันทีทุกเครื่อง โดยเปิดแอปอีเมล/Gmail ที่ตั้งค่าไว้ในมือถือหรือคอมพิวเตอร์ พร้อมกรอกหัวข้อและเนื้อหาให้อัตโนมัติ เหลือแค่กดส่ง<br>
                         ปุ่ม <b>"ส่งเข้าอีเมล"</b> (ส่งอัตโนมัติแบบไม่ต้องเปิดแอป) ใช้ EmailJS ซึ่งต้องตั้งค่า Service ID / Template ID / Public Key ในตัวแปร <b>REPORT_CONFIG</b> ในโค้ดก่อน — ถ้ายังไม่ได้ตั้งค่า ระบบจะเปิดแอปอีเมลให้อัตโนมัติแทน<br>
                         <b>สำคัญ (เพื่อให้อีเมลสวย มีตาราง/สี ไม่ใช่ตัวหนังสือแน่น ๆ):</b> ในหน้า EmailJS &gt; Email Template ให้ใช้ตัวแปร <code>{{{message_html}}}</code> (วงเล็บปีกกา 3 ชั้น) แทน <code>{{message}}</code> ธรรมดา เพื่อให้ระบบ render เป็น HTML ตาราง/สี แทนที่จะเป็นข้อความล้วนบรรทัดเดียว
@@ -690,26 +901,26 @@
                 </div>
 
                 <div class="admin-tab-switcher">
-                    <button class="admin-tab-btn active" id="tabBtnLeave" onclick="switchAdminTab('leave')">คำขอลา</button>
-                    <button class="admin-tab-btn" id="tabBtnAttendance" onclick="switchAdminTab('attendance')">เข้างาน</button>
-                    <button class="admin-tab-btn" id="tabBtnCouriers" onclick="switchAdminTab('couriers')">คนขับรถ</button>
+                    <button class="admin-tab-btn active" id="tabBtnLeave" onclick="switchAdminSubTab('leave')" data-i18n="admin_subtab_leave">คำขอลา</button>
+                    <button class="admin-tab-btn" id="tabBtnAttendance" onclick="switchAdminSubTab('attendance')" data-i18n="admin_subtab_attendance">เข้างาน</button>
+                    <button class="admin-tab-btn" id="tabBtnCouriers" onclick="switchAdminSubTab('couriers')" data-i18n="admin_subtab_couriers">คนขับรถ</button>
                 </div>
 
                 <div class="admin-card show" id="adminCardLeave">
                     <div class="section-title-form">
                         <i class="fa-solid fa-user-gear" style="color: var(--success);"></i>
-                        <span>ตรวจสอบสถานะและอนุมัติ/ปฏิเสธคำขอลา</span>
+                        <span data-i18n="admin_leave_card_title">ตรวจสอบสถานะและอนุมัติ/ปฏิเสธคำขอลา</span>
                     </div>
 
                     <div class="search-container">
-                        <input type="text" id="searchEmpId" class="form-input" placeholder="พิมพ์รหัสพนักงานเพื่อค้นหา..." oninput="renderAdminDashboard()">
-                        <button class="btn-dark-sm" onclick="refreshAdminData()"><i class="fa-solid fa-rotate-right"></i> รีเฟรช</button>
-                        <button class="btn-export" onclick="exportLeaveCsv()"><i class="fa-solid fa-file-arrow-down"></i> ดึงรายงาน CSV</button>
-                        <button class="btn-clear-all" onclick="clearAllLeaveRecords()"><i class="fa-solid fa-broom"></i> ล้างข้อมูลทั้งหมด</button>
+                        <input type="text" id="searchEmpId" class="form-input" placeholder="พิมพ์รหัสพนักงานเพื่อค้นหา..." data-i18n-placeholder="admin_search_emp_placeholder" oninput="renderAdminDashboard()">
+                        <button class="btn-dark-sm" onclick="refreshAdminData()"><i class="fa-solid fa-rotate-right"></i> <span data-i18n="btn_refresh">รีเฟรช</span></button>
+                        <button class="btn-export" onclick="exportLeaveCsv()"><i class="fa-solid fa-file-arrow-down"></i> <span data-i18n="btn_export_csv">ดึงรายงาน CSV</span></button>
+                        <button class="btn-clear-all" onclick="clearAllLeaveRecords()"><i class="fa-solid fa-broom"></i> <span data-i18n="btn_clear_all">ล้างข้อมูลทั้งหมด</span></button>
                     </div>
                     <div class="toggle-history-row">
                         <input type="checkbox" id="showHistoryLeave" onchange="renderAdminDashboard()">
-                        <label for="showHistoryLeave">แสดงรายการที่พ้นวันลาไปแล้วด้วย (ค่าเริ่มต้นจะซ่อนอัตโนมัติ)</label>
+                        <label for="showHistoryLeave" data-i18n="admin_show_expired_label">แสดงรายการที่พ้นวันลาไปแล้วด้วย (ค่าเริ่มต้นจะซ่อนอัตโนมัติ)</label>
                     </div>
 
                     <div class="record-list" id="adminTableBody"></div>
@@ -718,15 +929,15 @@
                 <div class="admin-card" id="adminCardAttendance">
                     <div class="section-title-form">
                         <i class="fa-solid fa-clock" style="color: var(--dhl-red);"></i>
-                        <span>รายงานเวลาเข้างาน (Check-in)</span>
+                        <span data-i18n="admin_attendance_card_title">รายงานเวลาเข้างาน (Check-in)</span>
                     </div>
 
                     <div class="search-container">
-                        <input type="text" id="searchCourierId" class="form-input" placeholder="พิมพ์ Courier ID เพื่อค้นหา..." oninput="renderAttendanceDashboard()">
+                        <input type="text" id="searchCourierId" class="form-input" placeholder="พิมพ์ Courier ID เพื่อค้นหา..." data-i18n-placeholder="admin_search_courier_placeholder" oninput="renderAttendanceDashboard()">
                         <input type="date" id="filterDate" class="form-input" style="flex:0 0 140px;" onchange="renderAttendanceDashboard()">
-                        <button class="btn-dark-sm" onclick="refreshAttendanceData()"><i class="fa-solid fa-rotate-right"></i> รีเฟรช</button>
-                        <button class="btn-export" onclick="exportAttendanceCsv()"><i class="fa-solid fa-file-arrow-down"></i> ดึงรายงาน CSV</button>
-                        <button class="btn-clear-all" onclick="clearAllAttendanceRecords()"><i class="fa-solid fa-broom"></i> ล้างข้อมูลทั้งหมด</button>
+                        <button class="btn-dark-sm" onclick="refreshAttendanceData()"><i class="fa-solid fa-rotate-right"></i> <span data-i18n="btn_refresh">รีเฟรช</span></button>
+                        <button class="btn-export" onclick="exportAttendanceCsv()"><i class="fa-solid fa-file-arrow-down"></i> <span data-i18n="btn_export_csv">ดึงรายงาน CSV</span></button>
+                        <button class="btn-clear-all" onclick="clearAllAttendanceRecords()"><i class="fa-solid fa-broom"></i> <span data-i18n="btn_clear_all">ล้างข้อมูลทั้งหมด</span></button>
                     </div>
 
                     <div class="record-list" id="attendanceTableBody"></div>
@@ -735,25 +946,25 @@
                 <div class="admin-card" id="adminCardCouriers">
                     <div class="section-title-form">
                         <i class="fa-solid fa-id-card" style="color: var(--dhl-red);"></i>
-                        <span>จัดการข้อมูลพนักงานขับรถ (เพิ่ม / แก้ไขชื่อ / ประเภทรถ)</span>
+                        <span data-i18n="admin_couriers_card_title">จัดการข้อมูลพนักงานขับรถ (เพิ่ม / แก้ไขชื่อ / ประเภทรถ)</span>
                     </div>
 
                     <form id="courierForm" onsubmit="handleCourierFormSubmit(event)">
                         <input type="hidden" id="courierEditDbId" value="">
                         <div class="input-group">
-                            <label>Courier ID * (กรอกรหัสเดิมเพื่อแก้ไข หรือรหัสใหม่เพื่อเพิ่มพนักงานคนใหม่)</label>
+                            <label data-i18n="courier_form_id_label">Courier ID * (กรอกรหัสเดิมเพื่อแก้ไข หรือรหัสใหม่เพื่อเพิ่มพนักงานคนใหม่)</label>
                             <input type="text" id="courierFormId" class="form-input" placeholder="เช่น: BPET05" style="text-transform:uppercase;" required>
                         </div>
                         <div class="input-group">
-                            <label>ชื่อ-นามสกุลพนักงานขับรถ *</label>
+                            <label data-i18n="courier_form_name_label">ชื่อ-นามสกุลพนักงานขับรถ *</label>
                             <input type="text" id="courierFormName" class="form-input" placeholder="เช่น: Somchai Jaidee" required>
                         </div>
                         <div class="input-group">
-                            <label>บริษัทขนส่ง (Vendor)</label>
+                            <label data-i18n="courier_form_vendor_label">บริษัทขนส่ง (Vendor)</label>
                             <input type="text" id="courierFormVendor" class="form-input" placeholder="เช่น: Phongtharin">
                         </div>
                         <div class="input-group">
-                            <label>ประเภทรถ *</label>
+                            <label data-i18n="courier_form_vehicle_label">ประเภทรถ *</label>
                             <div class="ktb-toggle-group">
                                 <button type="button" class="ktb-toggle-btn" id="btnVehicle4W" onclick="selectVehicleType('4W')">
                                     <i class="fa-solid fa-truck"></i> 4W
@@ -764,29 +975,48 @@
                             </div>
                         </div>
                         <div style="display:flex; gap:8px;">
-                            <button type="submit" class="submit-btn" style="flex:2;">บันทึกข้อมูล</button>
-                            <button type="button" class="ghost-btn" style="flex:1;" onclick="resetCourierForm()">ล้างฟอร์ม</button>
+                            <button type="submit" class="submit-btn" style="flex:2;" data-i18n="btn_save_data">บันทึกข้อมูล</button>
+                            <button type="button" class="ghost-btn" style="flex:1;" onclick="resetCourierForm()" data-i18n="btn_clear_form">ล้างฟอร์ม</button>
                         </div>
                     </form>
 
                     <div class="search-container" style="margin-top:16px;">
-                        <input type="text" id="searchCourierMgmt" class="form-input" placeholder="ค้นหารายชื่อ / รหัส..." oninput="renderCourierManagementList()">
-                        <button class="btn-dark-sm" onclick="refreshCourierData()"><i class="fa-solid fa-rotate-right"></i> รีเฟรช</button>
+                        <input type="text" id="searchCourierMgmt" class="form-input" placeholder="ค้นหารายชื่อ / รหัส..." data-i18n-placeholder="courier_search_placeholder" oninput="renderCourierManagementList()">
+                        <button class="btn-dark-sm" onclick="refreshCourierData()"><i class="fa-solid fa-rotate-right"></i> <span data-i18n="btn_refresh">รีเฟรช</span></button>
                     </div>
                     <div class="record-list" id="courierMgmtList"></div>
                 </div>
+                </div>
+                <!-- /adminUnlockedBox -->
 
-                <div class="admin-card" id="adminCardPPH">
+            </div>
+
+            <!-- =========== TAB 5: DASHBOARD (rendered directly, always visible once unlocked via PIN once) =========== -->
+            <div id="dashboardModuleSection" style="display:none; flex-direction:column; gap:12px;">
+                <div id="dashboardGateBox" class="step-box" style="text-align:center;">
+                    <i class="fa-solid fa-lock" style="font-size:22px; color:var(--dhl-grey); margin-bottom:8px;"></i>
+                    <div style="font-size:12.5px; color:#4a5568; margin-bottom:10px;">Dashboard สำหรับหัวหน้างานเท่านั้น กรุณายืนยันรหัสผ่าน</div>
+                    <button type="button" class="submit-btn" onclick="requestAdminTabAccess('dashboard')">ปลดล็อกด้วยรหัสผ่าน</button>
+                </div>
+                <div id="dashboardUnlockedMount" style="display:none; flex-direction:column; gap:12px;"></div>
+            </div>
+
+            <!-- =========== PPH content template (moved into book-swipe mount at runtime) =========== -->
+            <template id="pphContentTemplate">
+                <div class="admin-card show" id="adminCardPPH" style="display:block;">
                     <div class="rules-card" style="border-top-color: var(--dhl-yellow); margin-bottom:12px;">
                         <h4><i class="fa-solid fa-box" style="color: var(--dhl-red);"></i> <span id="pphDateTitle">PPH — วันนี้</span></h4>
                         <div style="font-size:11px; color:#4a5568; line-height:1.6;">กดปุ่มเวลา = บันทึกเวลาปัจจุบันที่จุดนั้นทันที • กดซ้ำ = แก้ไข พิมพ์เวลาใหม่ หรือพิมพ์ "-" เพื่อล้าง</div>
                         <button type="button" class="ghost-btn" style="margin-top:10px;" onclick="openPphHelpModal()"><i class="fa-solid fa-circle-question"></i> วิธีคำนวณ PPH</button>
                         <button type="button" class="submit-btn" id="pphVoiceBtn" style="margin-top:8px; background:#2563eb;" onclick="togglePphVoiceEntry()">
-                            <i class="fa-solid fa-microphone"></i> <span id="pphVoiceBtnLabel">พูดเพื่อบันทึกเวลา (เช่น "T05 F 09 30 D 10 40")</span>
+                            <i class="fa-solid fa-microphone"></i> <span id="pphVoiceBtnLabel">พูดเพื่อบันทึกเวลา (พูดรหัส เช่น "T05" แล้วพูดเวลา)</span>
                         </button>
                         <div class="voice-live-caption" id="pphVoiceCaption"></div>
+                        <div class="voice-retry-note" id="pphVoiceRetryNote">ไม่แน่ใจว่าฟังถูกไหม? แตะคำที่ได้ยินด้านบนเพื่อลบแล้วพูดใหม่เฉพาะจุดนั้น</div>
                         <div class="checklist-note" style="margin-top:6px;">
-                            พูดรูปแบบ: <b>T + รหัสท้าย 2 หลัก</b> ตามด้วย <b>F</b> (เวลา FS) และ/หรือ <b>D</b> (เวลา DEP) เช่น "T05 F 09 30 D 10 40" = คนขับรหัสลงท้าย 05 บันทึก FS 09:30 และ DEP 10:40 • หรือพูด "Inbound 07 30" เพื่อบันทึกเวลารถเข้า • ค้างพูดได้ต่อเนื่อง ระบบจะฟังต่อเองแม้มีจังหวะเงียบ กดปุ่มซ้ำเพื่อหยุดฟัง
+                            วิธีพูดแบบใหม่ (ง่ายสุด): พูดแค่ <b>รหัสท้ายคนขับ เช่น "T05"</b> → ระบบจะเปิดรอฟังช่อง <b>FS</b> ให้อัตโนมัติ จากนั้นพูดแค่เวลา เช่น <b>"10 00"</b> ระบบจะบันทึก FS ให้ทันที แล้วสลับไปรอฟัง <b>DEP</b> ต่อเองโดยไม่ต้องพูดรหัสซ้ำ พูดเวลาอีกครั้งเพื่อบันทึก DEP ก็เสร็จสิ้น 1 คน แล้วพูดรหัสคนถัดไปได้เลย<br>
+                            วิธีพูดแบบเดิม (พูดรวดเดียว) ยังใช้ได้: "code 05 start 09 30 end 10 40" = คนขับรหัสลงท้าย 05 บันทึก FS 09:30 และ DEP 10:40 • หรือพูด "Inbound 07 30" เพื่อบันทึกเวลารถเข้า • ค้างพูดได้ต่อเนื่อง ระบบจะฟังต่อเองแม้มีจังหวะเงียบ กดปุ่มซ้ำเพื่อหยุดฟัง<br>
+                            <b>ถ้าพูดแล้วเพี้ยน:</b> ระบบจะเลือกคำที่ใกล้เคียงคำสั่งที่สุดจากทุกทางเลือกที่ไมค์ได้ยิน ไม่ใช่แค่คำแรก และจะไม่บันทึกซ้ำคำสั่งเดิม ถ้ายังผิดบ่อย ให้พูดช้าลงและเว้นจังหวะระหว่างรหัสกับเวลา
                         </div>
                     </div>
 
@@ -838,6 +1068,7 @@
 
                     <div class="step-box" style="margin-top:12px;">
                         <div class="step-title"><span class="step-num-badge">2</span> Route prep <span style="font-weight:400; color:var(--dhl-grey); font-size:11px;">&nbsp;(Target ≥ 165 • นับเฉพาะ Courier)</span></div>
+                        <input type="text" id="pphRouteSearchBox" class="form-input" placeholder="ค้นหาด่วน: พิมพ์รหัสท้าย เช่น T05 หรือชื่อ..." oninput="renderPphRouteCourierList()" style="margin-bottom:8px;">
                         <div id="pphRouteCourierList" class="record-list"></div>
                         <div class="checklist-note" style="margin-top:8px;">กด FS (First Scan) และ DEP (Departure) รายคน — คำนวณจากคนที่มีครบทั้งคู่</div>
                         <div class="detail-info-box" style="display:block; margin-top:10px;" id="pphRouteResultBox">ยังไม่มี Courier เช็คอินวันนี้ — ทำ Time Attendance ก่อน</div>
@@ -846,8 +1077,11 @@
                     <button type="button" class="submit-btn" style="margin-top:12px; background:var(--danger);" onclick="clearTodayPphData()">🗑️ ล้างข้อมูล PPH วันนี้ (คีย์ผิด เริ่มใหม่)</button>
                     <div class="report-note" style="text-align:center; margin-top:8px;">แก้เวลาทีละจุด: กดปุ่มเวลานั้นซ้ำ แล้วพิมพ์เวลาใหม่ หรือพิมพ์ "-" เพื่อล้างเฉพาะจุด</div>
                 </div>
+            </template>
 
-                <div class="admin-card" id="adminCardDashboard">
+            <!-- =========== Dashboard content template (moved into dashboard mount at runtime) =========== -->
+            <template id="dashboardContentTemplate">
+                <div class="admin-card show" id="adminCardDashboard" style="display:block;">
                     <div class="report-card" style="border-top-color: var(--dhl-yellow); margin-bottom:12px;">
                         <div class="section-title-form" style="margin-bottom:4px;">
                             <i class="fa-solid fa-gauge-high" style="color: var(--dhl-dark);"></i>
@@ -908,6 +1142,11 @@
                         </div>
                     </div>
 
+                    <div class="form-section" style="margin-top:12px;" id="dashFirstDelCard">
+                        <div class="section-title-form"><i class="fa-solid fa-truck-fast" style="color:#0891b2;"></i> First Del Summary</div>
+                        <div class="pph-meta-line" id="dashFirstDelMetaLine">ยังไม่มีข้อมูล</div>
+                    </div>
+
                     <div class="form-section" style="margin-top:12px;" id="dashPhotoCard">
                         <div class="photo-gallery-header">
                             <div class="section-title-form" style="margin-bottom:0; border-bottom:none; padding-bottom:0;"><i class="fa-solid fa-camera" style="color:var(--dhl-dark);"></i> Check-in Photos</div>
@@ -918,8 +1157,7 @@
 
                     <button type="button" class="submit-btn" style="margin-top:12px;" onclick="exportDashboardImage()"><i class="fa-solid fa-camera"></i> สร้างรายงานวันนี้ (Export ภาพ)</button>
                 </div>
-
-            </div>
+            </template>
 
         </div>
     </div>
@@ -996,6 +1234,44 @@
         </div>
     </div>
 
+    <div class="warn-modal-overlay" id="settingsModal">
+        <div class="warn-card" style="max-width:340px; border-top-color:var(--dhl-dark);">
+            <div class="warn-header" style="background:#f1f5f9; border-bottom-color:#e2e8f0;">
+                <div class="warn-header-title" style="color:var(--dhl-dark);">
+                    <i class="fa-solid fa-gear"></i>
+                    <span data-i18n="settings_title">การตั้งค่า</span>
+                </div>
+            </div>
+            <div class="warn-body">
+                <p style="font-weight:700; margin-bottom:4px;" data-i18n="settings_lang_label">ภาษา / Language</p>
+                <div class="settings-lang-grid">
+                    <button type="button" class="lang-opt-btn" id="langOptTh" onclick="setAppLanguage('th')"><span class="flag-emoji">🇹🇭</span> ไทย</button>
+                    <button type="button" class="lang-opt-btn" id="langOptEn" onclick="setAppLanguage('en')"><span class="flag-emoji">🇬🇧</span> English</button>
+                    <button type="button" class="lang-opt-btn" id="langOptCn" onclick="setAppLanguage('cn')"><span class="flag-emoji">🇨🇳</span> 中文</button>
+                    <button type="button" class="lang-opt-btn" id="langOptJp" onclick="setAppLanguage('jp')"><span class="flag-emoji">🇯🇵</span> 日本語</button>
+                </div>
+                <p style="font-weight:700; margin:16px 0 4px;" data-i18n="settings_theme_label">ธีมสี (DHL)</p>
+                <div class="settings-lang-grid">
+                    <button type="button" class="lang-opt-btn theme-opt-btn" id="themeOptClassic" onclick="setAppTheme('classic')">
+                        <span class="theme-swatch" style="background:linear-gradient(135deg,#FFCC00 50%,#D40511 50%);"></span> Classic
+                    </button>
+                    <button type="button" class="lang-opt-btn theme-opt-btn" id="themeOptSunset" onclick="setAppTheme('sunset')">
+                        <span class="theme-swatch" style="background:linear-gradient(135deg,#FFB300 50%,#C81D25 50%);"></span> Sunset
+                    </button>
+                    <button type="button" class="lang-opt-btn theme-opt-btn" id="themeOptOcean" onclick="setAppTheme('ocean')">
+                        <span class="theme-swatch" style="background:linear-gradient(135deg,#FFCC00 50%,#0B5ED7 50%);"></span> Ocean
+                    </button>
+                    <button type="button" class="lang-opt-btn theme-opt-btn" id="themeOptMidnight" onclick="setAppTheme('midnight')">
+                        <span class="theme-swatch" style="background:linear-gradient(135deg,#FFD84D 50%,#B3001B 50%);"></span> Midnight
+                    </button>
+                </div>
+            </div>
+            <div class="warn-btn-group">
+                <button class="warn-btn warn-btn-confirm" style="flex:1; background:var(--dhl-dark); color:#fff;" onclick="closeSettingsModal()" data-i18n="settings_close_btn">ปิด</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast-box" id="toastBar">
         <i id="toastIcon" class="fa-solid"></i>
         <span id="toastMessage"></span>
@@ -1015,6 +1291,148 @@
             "Authorization": "Bearer " + SB_KEY
         };
 
+        // ===================== I18N =====================
+        const I18N = {
+            th: {
+                app_title: "ระบบลางาน &amp; เช็คอินเข้างาน (Smart Leave &amp; Check-in)",
+                app_subtitle: "Operational Resource Planning Portal",
+                tab_checkin: "เช็คอิน", tab_pd: "PD", tab_pph: "PPH", tab_firstdel: "First Del",
+                tab_dashboard: "Dashboard", tab_history: "ลางาน", tab_manage: "จัดการ",
+                step1_title: "กรอก Courier ID", step2_title: "ตรวจสอบความพร้อมก่อนเช็คอิน", step3_title: "สแกนใบหน้ายืนยันตัวตนเพื่อเช็คอิน",
+                btn_check: "ตรวจสอบ", uniform_label: "การแต่งกาย", uniform_ok: "ถูกต้อง", uniform_bad: "ไม่ถูกต้อง",
+                ktb_has: "มี", ktb_none: "ไม่มี", btn_open_camera: "เปิดกล้อง", btn_capture_checkin: "ถ่ายภาพและเช็คอิน",
+                btn_next_checkin: "เช็คอินรายการถัดไป",
+                pd_title: "PD Performance Dialog", pd_desc: "ถ่ายภาพหมู่การประชุมเช้า — บังคับกล้องสด แนวนอนเท่านั้น • ระบบ Stamp ชื่อสาขาให้อัตโนมัติ",
+                pd_capture_title: "ถ่ายภาพ PD วันนี้", pd_btn_capture: "ถ่ายภาพ", pd_btn_retake: "ถ่ายใหม่", pd_btn_confirm: "ยืนยันบันทึก",
+                pd_status_title: "สถานะ PD วันนี้", pd_no_photo_yet: "ยังไม่มีการถ่ายภาพ PD วันนี้",
+                swipe_to_pph: "ปัดซ้ายไปหน้า PPH", swipe_to_pd: "ปัดขวากลับหน้า PD",
+                fd_title: "First Delivery", fd_target: "(Target ก่อน 09:00)", fd_desc: "Stem Out = จับเวลาตั้งแต่ Departure (จากขั้น PPH Route prep) → First Del • กด First Del เพื่อบันทึกเวลา (แก้ไข/ล้างได้)",
+                rules_title: "กฎเหล็กการลางาน", leave_form_title: "กรอกข้อมูลยื่นคำขอ", btn_submit_leave: "ส่งข้อมูลเข้าฐานระบบ",
+                manage_locked_desc: "ส่วนนี้สำหรับหัวหน้างานเท่านั้น กรุณายืนยันรหัสผ่านเพื่อเข้าใช้งาน", manage_unlock_btn: "ปลดล็อกด้วยรหัสผ่าน",
+                manage_logout_btn: "ออกจากระบบผู้ดูแล", report_title: "ส่งสรุปรายงานประจำวันเข้าอีเมล (ใครลา / ใครสาย / PD / First Del)",
+                settings_title: "การตั้งค่า", settings_lang_label: "ภาษา / Language", settings_theme_label: "ธีมสี (DHL)", settings_close_btn: "ปิด"
+            },
+            en: {
+                app_title: "Smart Leave &amp; Check-in System",
+                app_subtitle: "Operational Resource Planning Portal",
+                tab_checkin: "Check-in", tab_pd: "PD", tab_pph: "PPH", tab_firstdel: "First Del",
+                tab_dashboard: "Dashboard", tab_history: "Leave", tab_manage: "Manage",
+                step1_title: "Enter Courier ID", step2_title: "Pre check-in readiness check", step3_title: "Face scan to confirm check-in",
+                btn_check: "Check", uniform_label: "Uniform", uniform_ok: "Correct", uniform_bad: "Incorrect",
+                ktb_has: "Has bag", ktb_none: "No bag", btn_open_camera: "Open Camera", btn_capture_checkin: "Capture & Check-in",
+                btn_next_checkin: "Check-in next person",
+                pd_title: "PD Performance Dialog", pd_desc: "Take the morning briefing group photo — live camera only, landscape only • Branch name auto-stamped",
+                pd_capture_title: "Take today's PD photo", pd_btn_capture: "Capture", pd_btn_retake: "Retake", pd_btn_confirm: "Confirm & Save",
+                pd_status_title: "Today's PD status", pd_no_photo_yet: "No PD photo taken yet today",
+                swipe_to_pph: "Swipe left for PPH", swipe_to_pd: "Swipe right back to PD",
+                fd_title: "First Delivery", fd_target: "(Target before 09:00)", fd_desc: "Stem Out = time from Departure (PPH Route prep) → First Delivery • Tap First Del to log time (editable/clearable)",
+                rules_title: "Leave Policy Rules", leave_form_title: "Submit Leave Request", btn_submit_leave: "Submit to system",
+                manage_locked_desc: "This section is for supervisors only. Please verify your password.", manage_unlock_btn: "Unlock with password",
+                manage_logout_btn: "Log out of admin", report_title: "Send daily summary email (leave / late / PD / First Del)",
+                settings_title: "Settings", settings_lang_label: "Language", settings_theme_label: "Theme (DHL)", settings_close_btn: "Close"
+            },
+            cn: {
+                app_title: "智能请假与打卡系统",
+                app_subtitle: "运营资源规划平台",
+                tab_checkin: "打卡", tab_pd: "PD晨会", tab_pph: "PPH", tab_firstdel: "首次派送",
+                tab_dashboard: "仪表盘", tab_history: "请假", tab_manage: "管理",
+                step1_title: "输入快递员编号", step2_title: "打卡前准备检查", step3_title: "人脸扫描确认打卡",
+                btn_check: "查询", uniform_label: "着装", uniform_ok: "正确", uniform_bad: "不正确",
+                ktb_has: "有", ktb_none: "没有", btn_open_camera: "打开相机", btn_capture_checkin: "拍照并打卡",
+                btn_next_checkin: "下一位打卡",
+                pd_title: "PD 晨会", pd_desc: "拍摄早会集体照 — 仅限实时相机、横向拍摄 • 系统自动加盖分支名称水印",
+                pd_capture_title: "拍摄今日PD照片", pd_btn_capture: "拍照", pd_btn_retake: "重拍", pd_btn_confirm: "确认保存",
+                pd_status_title: "今日PD状态", pd_no_photo_yet: "今天尚未拍摄PD照片",
+                swipe_to_pph: "左滑进入PPH", swipe_to_pd: "右滑返回PD",
+                fd_title: "首次派送", fd_target: "（目标09:00前）", fd_desc: "停留时间 = 从发车（PPH装车阶段）到首次派送的时间 • 点击首次派送记录时间（可编辑/清除）",
+                rules_title: "请假规定", leave_form_title: "填写申请信息", btn_submit_leave: "提交申请",
+                manage_locked_desc: "此区域仅限主管使用，请先验证密码。", manage_unlock_btn: "输入密码解锁",
+                manage_logout_btn: "退出管理模式", report_title: "发送每日汇总邮件（请假/迟到/PD/首次派送）",
+                settings_title: "设置", settings_lang_label: "语言", settings_theme_label: "主题色 (DHL)", settings_close_btn: "关闭"
+            },
+            jp: {
+                app_title: "スマート休暇・出勤管理システム",
+                app_subtitle: "オペレーション・リソース・プランニング・ポータル",
+                tab_checkin: "出勤", tab_pd: "PD", tab_pph: "PPH", tab_firstdel: "初回配達",
+                tab_dashboard: "ダッシュボード", tab_history: "休暇", tab_manage: "管理",
+                step1_title: "クーリエIDを入力", step2_title: "出勤前チェック", step3_title: "顔認証で出勤確認",
+                btn_check: "確認", uniform_label: "服装", uniform_ok: "適正", uniform_bad: "不適正",
+                ktb_has: "あり", ktb_none: "なし", btn_open_camera: "カメラを起動", btn_capture_checkin: "撮影して出勤",
+                btn_next_checkin: "次の人を出勤登録",
+                pd_title: "PD パフォーマンスダイアログ", pd_desc: "朝礼の集合写真を撮影 — ライブカメラ限定・横向きのみ • 拠点名を自動スタンプ",
+                pd_capture_title: "本日のPD写真を撮影", pd_btn_capture: "撮影", pd_btn_retake: "撮り直す", pd_btn_confirm: "確認して保存",
+                pd_status_title: "本日のPD状況", pd_no_photo_yet: "本日はまだPD写真がありません",
+                swipe_to_pph: "左にスワイプでPPHへ", swipe_to_pd: "右にスワイプでPDへ戻る",
+                fd_title: "初回配達", fd_target: "（目標09:00前）", fd_desc: "ステムアウト = 出発（PPH配車準備）から初回配達までの時間 • 初回配達をタップして時刻を記録（編集・削除可）",
+                rules_title: "休暇規定", leave_form_title: "申請内容を入力", btn_submit_leave: "システムへ送信",
+                manage_locked_desc: "この項目は管理者専用です。パスワードを確認してください。", manage_unlock_btn: "パスワードで解除",
+                manage_logout_btn: "管理者からログアウト", report_title: "日次サマリーメールを送信（休暇/遅刻/PD/初回配達）",
+                settings_title: "設定", settings_lang_label: "言語", settings_theme_label: "テーマカラー (DHL)", settings_close_btn: "閉じる"
+            }
+        };
+        let currentAppLang = 'th';
+        function applyI18n() {
+            const dict = I18N[currentAppLang] || I18N.th;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key] != null) el.innerHTML = dict[key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (dict[key] != null) el.setAttribute('placeholder', dict[key]);
+            });
+            document.querySelectorAll('[data-i18n-title]').forEach(el => {
+                const key = el.getAttribute('data-i18n-title');
+                if (dict[key] != null) el.setAttribute('title', dict[key]);
+            });
+            document.querySelectorAll('.lang-opt-btn').forEach(b => b.classList.remove('active'));
+            const map = { th: 'langOptTh', en: 'langOptEn', cn: 'langOptCn', jp: 'langOptJp' };
+            const activeBtn = document.getElementById(map[currentAppLang]);
+            if (activeBtn) activeBtn.classList.add('active');
+            document.documentElement.lang = currentAppLang;
+            // Re-render dynamic lists/labels that are built from JS template
+            // strings so they pick up the new language immediately too.
+            if (typeof updateChipsUI === 'function' && document.getElementById('chipsBox')) updateChipsUI();
+            if (typeof renderFirstDelList === 'function' && document.getElementById('firstDelList')) renderFirstDelList();
+        }
+        function t(key) {
+            const dict = I18N[currentAppLang] || I18N.th;
+            return dict[key] != null ? dict[key] : (I18N.th[key] || key);
+        }
+        function setAppLanguage(lang) {
+            currentAppLang = lang;
+            applyI18n();
+            triggerToast(lang === 'th' ? 'เปลี่ยนภาษาเป็นไทยแล้ว' : 'Language updated', 'success');
+        }
+        function openSettingsModal(e) { if (e) e.stopPropagation(); document.getElementById('settingsModal').classList.add('show'); }
+        function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('show'); }
+
+        // ===================== THEME (DHL color variants) =====================
+        let currentAppTheme = 'classic';
+        const THEME_CLASS_MAP = { classic: '', sunset: 'theme-sunset', ocean: 'theme-ocean', midnight: 'theme-midnight' };
+        const THEME_BTN_ID_MAP = { classic: 'themeOptClassic', sunset: 'themeOptSunset', ocean: 'themeOptOcean', midnight: 'themeOptMidnight' };
+        function applyTheme() {
+            document.body.classList.remove('theme-sunset', 'theme-ocean', 'theme-midnight');
+            const cls = THEME_CLASS_MAP[currentAppTheme];
+            if (cls) document.body.classList.add(cls);
+            document.querySelectorAll('.theme-opt-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById(THEME_BTN_ID_MAP[currentAppTheme]);
+            if (btn) btn.classList.add('active');
+        }
+        function setAppTheme(theme) {
+            currentAppTheme = theme;
+            applyTheme();
+            try { localStorage.setItem('dhl_app_theme', theme); } catch (e) {}
+            triggerToast('เปลี่ยนธีมสีแล้ว', 'success');
+        }
+        function loadSavedTheme() {
+            try {
+                const saved = localStorage.getItem('dhl_app_theme');
+                if (saved && THEME_CLASS_MAP.hasOwnProperty(saved)) currentAppTheme = saved;
+            } catch (e) {}
+            applyTheme();
+        }
+
         // ===================== REALTIME =====================
         let sbRealtimeClient = null;
         function initRealtimeSubscription() {
@@ -1029,24 +1447,17 @@
                     { event: '*', schema: 'public', table: 'attendance_checkins' },
                     async (payload) => {
                         await fetchAttendanceData();
+                        renderDayTimeline();
 
-                        if (currentAppMode === 'admin') {
-                            const dashCard = document.getElementById('adminCardDashboard');
-                            if (dashCard && dashCard.classList.contains('show')) {
-                                renderDashboardTab();
-                            }
+                        if (currentMainTab === 'manage' && adminUnlocked) {
                             const attCard = document.getElementById('adminCardAttendance');
-                            if (attCard && attCard.classList.contains('show')) {
-                                renderAttendanceDashboard();
-                            }
-                            const pphCard = document.getElementById('adminCardPPH');
-                            if (pphCard && pphCard.classList.contains('show')) {
-                                renderPphRouteCourierList();
-                                pullCourierCountFromCheckin();
-                            }
-                            if (payload.eventType === 'INSERT' && payload.new) {
-                                triggerToast(`🟢 ${payload.new.emp_name} เช็คอินแล้ว (${payload.new.checkin_time})`, 'success');
-                            }
+                            if (attCard && attCard.classList.contains('show')) renderAttendanceDashboard();
+                        }
+                        if (currentMainTab === 'pph') { renderPphRouteCourierList(); pullCourierCountFromCheckin(); }
+                        if (currentMainTab === 'firstdel') { renderFirstDelList(); }
+                        if (currentMainTab === 'dashboard' && dashboardUnlocked) { renderDashboardTab(); }
+                        if (payload.eventType === 'INSERT' && payload.new) {
+                            triggerToast(`🟢 ${payload.new.emp_name} เช็คอินแล้ว (${payload.new.checkin_time})`, 'success');
                         }
                     }
                 )
@@ -1074,6 +1485,10 @@
         const CHECKIN_RADIUS_M = 150;
         const WORK_START_HOUR = 7;
         const WORK_START_MIN = 0;
+
+        const PD_WINDOW_START_MIN = 7 * 60;      // 07:00
+        const PD_WINDOW_END_MIN = 7 * 60 + 15;   // 07:15
+        const FIRST_DEL_TARGET_MIN = 9 * 60;     // 09:00
 
         const COURIER_BASE_LIST = [
             {id:"BPED09", name:"Piyaphong Kamlangharn", vendor:"DHL", type:""},
@@ -1119,6 +1534,7 @@
         let currentDistance = null;
         let locationOk = false;
         let cameraStream = null;
+        let currentUniformStatus = null;
         let currentKtbBagStatus = null;
         let selectedVehicleType = null;
         let lastCapturedPhotoDataUrl = null;
@@ -1320,6 +1736,53 @@
             try { attendanceRecords = await sbSelectAttendance(); } catch (err) { console.warn("fetchAttendanceData error:", err); attendanceRecords = []; }
         }
 
+        // ===================== PD PHOTO (Supabase table: pd_photos) =====================
+        // Expected columns: id (auto), pd_date (date, unique per day), photo_data (text/base64),
+        // captured_time (text HH:MM:SS), status (text 'ontime'|'late'), updated_at (auto)
+        let pdTodayRecord = null;
+        let pdCameraStream = null;
+        let pdPendingPhotoDataUrl = null;
+
+        async function sbSelectPdPhoto(dateStr) {
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/pd_photos?pd_date=eq.${dateStr}&select=*`, { method: "GET", headers: SB_HEADERS });
+            if (!res.ok) throw new Error("GET failed: " + res.status);
+            const rows = await res.json();
+            return rows.length ? rows[0] : null;
+        }
+        async function sbUpsertPdPhoto(record) {
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/pd_photos`, {
+                method: "POST",
+                headers: { ...SB_HEADERS, "Prefer": "resolution=merge-duplicates,return=minimal" },
+                body: JSON.stringify(record)
+            });
+            if (!res.ok) { const errText = await res.text(); throw new Error("UPSERT failed: " + res.status + " " + errText); }
+        }
+
+        // ===================== FIRST DEL (Supabase table: first_del_log) =====================
+        // Expected columns: id (auto), fd_date (date), courier_id (text), first_del_time (text HH:MM),
+        // stem_out_minutes (int), updated_at (auto). Unique on (fd_date, courier_id) recommended.
+        let firstDelLogToday = {}; // { courier_id: { first_del_time, stem_out_minutes } }
+        async function sbSelectFirstDel(dateStr) {
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/first_del_log?fd_date=eq.${dateStr}&select=*`, { method: "GET", headers: SB_HEADERS });
+            if (!res.ok) throw new Error("GET failed: " + res.status);
+            return await res.json();
+        }
+        async function sbUpsertFirstDel(record) {
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/first_del_log`, {
+                method: "POST",
+                headers: { ...SB_HEADERS, "Prefer": "resolution=merge-duplicates,return=minimal" },
+                body: JSON.stringify(record)
+            });
+            if (!res.ok) { const errText = await res.text(); throw new Error("UPSERT failed: " + res.status + " " + errText); }
+        }
+        async function loadFirstDelForToday() {
+            firstDelLogToday = {};
+            try {
+                const rows = await sbSelectFirstDel(todayStr());
+                rows.forEach(r => { firstDelLogToday[r.courier_id] = { first_del_time: r.first_del_time, stem_out_minutes: r.stem_out_minutes }; });
+            } catch (err) { console.warn("loadFirstDelForToday error (create table first_del_log to persist):", err); }
+        }
+
         function checkIsInPromoRange(targetDateStr) {
             const tokens = targetDateStr.split('-');
             const year = parseInt(tokens[0]);
@@ -1363,20 +1826,37 @@
 
         document.addEventListener("DOMContentLoaded", async () => {
             document.getElementById("monthSelect").value = new Date().getMonth();
-            document.getElementById("filterDate").value = todayStr();
-            const reportDateField = document.getElementById("reportDate");
-            if (reportDateField) reportDateField.value = todayStr();
-            const dashboardDateField = document.getElementById("dashboardDate");
-            if (dashboardDateField) dashboardDateField.value = todayStr();
             startLiveClock();
             await loadCourierData();
             await fetchAttendanceData();
+            await loadFirstDelForToday();
             if (window.emailjs && REPORT_CONFIG.publicKey) {
                 try { emailjs.init({ publicKey: REPORT_CONFIG.publicKey }); } catch (e) { console.warn("emailjs.init error:", e); }
             }
             initRealtimeSubscription();
-            await switchMode('checkin');
+            applyI18n();
+            loadSavedTheme();
+            updateAdminTabVisibility();
+            setupBookSwipe();
+            await switchMainTab('checkin');
         });
+
+        // ===================== ADMIN-ONLY TAB VISIBILITY =====================
+        // PD / PPH / First Del / Dashboard / Manage are hidden from everyone
+        // except after a successful admin PIN unlock (via the hidden gestures).
+        const ADMIN_ONLY_TABS = ['pd', 'pph', 'firstdel', 'dashboard', 'manage'];
+        const ADMIN_ONLY_TAB_BTN_IDS = ['btnPDTab', 'btnPPHTab', 'btnFirstDelTab', 'btnDashboardTab', 'btnManageTab'];
+        const PUBLIC_ONLY_TAB_BTN_IDS = ['btnCheckinTab', 'btnHistoryTab'];
+        function updateAdminTabVisibility() {
+            ADMIN_ONLY_TAB_BTN_IDS.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = adminUnlocked ? 'flex' : 'none';
+            });
+            PUBLIC_ONLY_TAB_BTN_IDS.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = adminUnlocked ? 'none' : 'flex';
+            });
+        }
 
         // ===================== RESILIENT SPEECH RECOGNITION =====================
         let activeRecognitionSession = null;
@@ -1391,6 +1871,35 @@
 
         function isRecognitionSessionActive() {
             return !!activeRecognitionSession;
+        }
+
+        // Simple Levenshtein-style similarity check used to catch mishearings
+        // that regex alone can't -- e.g. "cold" vs "code", "stark" vs "start".
+        // Returns true if `word` is close enough to any of `targets`.
+        function isFuzzyCloseToAny(word, targets, maxDist) {
+            if (!word) return false;
+            const w = word.toLowerCase();
+            for (const t of targets) {
+                if (w === t) return true;
+                const dist = levenshteinDistance(w, t);
+                if (dist <= (maxDist != null ? maxDist : 1)) return true;
+            }
+            return false;
+        }
+        function levenshteinDistance(a, b) {
+            const m = a.length, n = b.length;
+            if (m === 0) return n;
+            if (n === 0) return m;
+            const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+            for (let i = 0; i <= m; i++) dp[i][0] = i;
+            for (let j = 0; j <= n; j++) dp[0][j] = j;
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    const cost = a[i-1] === b[j-1] ? 0 : 1;
+                    dp[i][j] = Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + cost);
+                }
+            }
+            return dp[m][n];
         }
 
         function startResilientRecognition(config) {
@@ -1411,16 +1920,47 @@
             recognition.lang = config.lang || 'th-TH';
             recognition.continuous = true;
             recognition.interimResults = true;
-            recognition.maxAlternatives = 1;
+            recognition.maxAlternatives = config.maxAlternatives || 1;
 
             recognition.onresult = (e) => {
                 let interim = '';
                 for (let i = e.resultIndex; i < e.results.length; i++) {
-                    const chunk = e.results[i][0].transcript;
-                    if (e.results[i].isFinal) {
-                        session.finalText = (session.finalText + ' ' + chunk).trim();
+                    const result = e.results[i];
+                    if (result.isFinal) {
+                        // A single-best transcript is often wrong (esp. Thai-accented
+                        // English commands getting misheard as unrelated words like
+                        // "Hawkeye"). When the caller supplies altMatcher, scan every
+                        // alternative the engine offered and prefer the first one that
+                        // actually looks like a valid command, instead of blindly
+                        // trusting alternative #0. If none of the alternatives match
+                        // cleanly, fall back to the highest-confidence alternative
+                        // rather than always alt #0, since #0 isn't always best.
+                        let chosenTranscript = result[0].transcript;
+                        let chosenConfidence = result[0].confidence || 0;
+                        let matched = false;
+                        if (config.altMatcher) {
+                            for (let j = 0; j < result.length; j++) {
+                                const altTranscript = result[j].transcript;
+                                if (config.altMatcher(altTranscript)) {
+                                    chosenTranscript = altTranscript;
+                                    chosenConfidence = result[j].confidence || 0;
+                                    matched = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!matched) {
+                            let best = result[0];
+                            for (let j = 1; j < result.length; j++) {
+                                if ((result[j].confidence || 0) > (best.confidence || 0)) best = result[j];
+                            }
+                            chosenTranscript = best.transcript;
+                            chosenConfidence = best.confidence || 0;
+                        }
+                        session.finalText = (session.finalText + ' ' + chosenTranscript).trim();
+                        config.onFinalChunk && config.onFinalChunk(chosenTranscript, chosenConfidence);
                     } else {
-                        interim += chunk;
+                        interim += result[0].transcript;
                     }
                 }
                 config.onUpdate && config.onUpdate(session.finalText.trim(), interim.trim());
@@ -1460,6 +2000,18 @@
         function normalizeForPhraseMatch(txt) {
             return (txt || "").toLowerCase().replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim();
         }
+        function phraseSoundsLikeAdminUnlock(txt) {
+            const words = normalizeForPhraseMatch(txt).split(" ").filter(Boolean);
+            if (words.length === 0) return false;
+            const greetTargets = ['hallo', 'hello', 'halo', 'hullo', 'yellow', 'below'];
+            const adminTargets = ['admin', 'add men', 'admen', 'admit'];
+            let greetHit = false, adminHit = false;
+            for (const w of words) {
+                if (!greetHit && isFuzzyCloseToAny(w, greetTargets, 2)) greetHit = true;
+                if (!adminHit && isFuzzyCloseToAny(w, ['admin', 'admen', 'admit', 'atmin'], 2)) adminHit = true;
+            }
+            return greetHit && adminHit;
+        }
         function startSecretVoiceListen() {
             if (!window.isSecureContext) {
                 triggerToast("ต้องเปิดผ่าน HTTPS เท่านั้นถึงจะใช้ไมโครโฟนได้ ลองแตะกลางจอรัว ๆ 3 ครั้งแทน", "warning");
@@ -1473,9 +2025,11 @@
             startResilientRecognition({
                 lang: 'en-US',
                 maxDurationMs: 12000,
+                maxAlternatives: 6,
+                altMatcher: (alt) => phraseSoundsLikeAdminUnlock(alt),
                 onUpdate: (finalText, interimText) => {
-                    const combined = normalizeForPhraseMatch(finalText + ' ' + interimText);
-                    if (combined.includes(SECRET_ADMIN_PHRASE) || combined.includes("hello admin") || combined.includes("halo admin")) {
+                    const combined = finalText + ' ' + interimText;
+                    if (phraseSoundsLikeAdminUnlock(combined)) {
                         stopActiveRecognitionSession();
                         tryAccessAdmin();
                     }
@@ -1492,10 +2046,7 @@
         }
 
         // === Secret admin gesture: tap the center of the screen (the clock hero
-        // card) 3 times in a row, then say "Hallo Admin" out loud. Reaching the 3rd
-        // tap automatically starts listening for the phrase -- it no longer opens
-        // the PIN screen by itself, so BOTH steps (3 taps AND the spoken phrase) are
-        // required together, matching how the feature is meant to work. ===
+        // card) 3 times in a row, then say "Hallo Admin" out loud. ===
         (function setupSecretAdminGestures() {
             const centerTapEl = document.getElementById('secretCenterTapTrigger');
             const logoEl = document.getElementById('secretLogoTrigger');
@@ -1517,12 +2068,11 @@
             }
 
             if (centerTapEl) centerTapEl.addEventListener('click', registerSecretTap);
-            // Keep the logo as a secondary (backward compatible) trigger for the
-            // same 3-tap + voice flow.
-            if (logoEl) logoEl.addEventListener('click', registerSecretTap);
+            if (logoEl) logoEl.addEventListener('click', (e) => {
+                if (e.target.closest('#openSettingsBtn')) return;
+                registerSecretTap();
+            });
 
-            // Long-press either area also jumps straight to voice listening, as a
-            // convenience shortcut that skips the tap counting.
             let pressTimer = null;
             const LONG_PRESS_MS = 550;
             const startPress = () => { pressTimer = setTimeout(startSecretVoiceListen, LONG_PRESS_MS); };
@@ -1565,85 +2115,217 @@
             setTimeout(() => { document.getElementById("pinCodeField").focus(); }, 300);
         }
         function closePinModal() { document.getElementById("pinModal").classList.remove("show"); pendingAdminTabTarget = null; }
+
+        let adminUnlocked = false;
+        let dashboardUnlocked = false;
+
         async function verifyAdminPin() {
             const inputPin = document.getElementById("pinCodeField").value;
             if (inputPin === ADMIN_PIN_SECRET) {
                 document.getElementById("pinModal").classList.remove("show");
                 triggerToast("ยินดีต้อนรับผู้ดูแลระบบ", "success");
-                await switchMode('admin');
-                if (pendingAdminTabTarget) {
-                    switchAdminTab(pendingAdminTabTarget);
-                    pendingAdminTabTarget = null;
+                adminUnlocked = true;
+                dashboardUnlocked = true;
+                updateAdminTabVisibility();
+                if (pendingAdminTabTarget === 'dashboard') {
+                    await switchMainTab('dashboard');
+                } else {
+                    await switchMainTab('manage');
                 }
+                pendingAdminTabTarget = null;
             } else {
                 triggerToast("รหัสผ่านไม่ถูกต้อง เฉพาะหัวหน้างานเท่านั้น!", "danger");
                 document.getElementById("pinCodeField").value = "";
             }
         }
 
-        let currentAppMode = 'checkin';
+        // ===================== MAIN TAB SWITCHING (7-tab bottom nav) =====================
+        let currentMainTab = 'checkin';
+        const TAB_BTN_IDS = { checkin:'btnCheckinTab', pd:'btnPDTab', pph:'btnPPHTab', firstdel:'btnFirstDelTab', dashboard:'btnDashboardTab', history:'btnHistoryTab', manage:'btnManageTab' };
+        const TAB_SECTION_IDS = { checkin:'checkinModuleSection', pdpph:'pdPphBookWrap', firstdel:'firstDelModuleSection', dashboard:'dashboardModuleSection', history:'leaveModuleSection', manage:'adminSection' };
 
-        async function switchMode(mode, opts = {}) {
-            if (currentAppMode === 'admin' && mode !== 'admin' && !opts.confirmed) {
-                const proceed = confirm("คุณกำลังอยู่ในโหมดผู้ดูแล (Admin)\nต้องการออกจากโหมดผู้ดูแลหรือไม่?\n\nกด OK เพื่อออก หรือ ยกเลิก เพื่ออยู่ในโหมดผู้ดูแลต่อ");
-                if (!proceed) return;
+        function hideAllMainSections() {
+            Object.values(TAB_SECTION_IDS).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+        }
+
+        async function switchMainTab(tab) {
+            if (ADMIN_ONLY_TABS.includes(tab) && !adminUnlocked) {
+                triggerToast("ส่วนนี้สำหรับผู้ดูแลระบบเท่านั้น", "warning");
+                tab = 'checkin';
             }
-            currentAppMode = mode;
+            currentMainTab = tab;
+            Object.entries(TAB_BTN_IDS).forEach(([key, btnId]) => {
+                const btn = document.getElementById(btnId);
+                if (!btn) return;
+                const isActive = (key === tab) || (tab === 'pd' && key === 'pd') || (tab === 'pph' && key === 'pph');
+                btn.classList.toggle('active', isActive);
+            });
 
-            document.getElementById('btnUserMode').classList.toggle('active', mode === 'user');
-            document.getElementById('btnCheckinMode').classList.toggle('active', mode === 'checkin');
-            document.getElementById('btnAdminMode').classList.toggle('active', mode === 'admin');
-            document.getElementById('btnPPHMode').classList.toggle('active', false);
-            document.getElementById('btnDashboardMode').classList.toggle('active', false);
-            document.getElementById('btnPPHMode').style.display = mode === 'admin' ? 'flex' : 'none';
-            document.getElementById('btnDashboardMode').style.display = mode === 'admin' ? 'flex' : 'none';
+            hideAllMainSections();
 
-            const titleEl = document.getElementById('headerTitleText');
-            if (titleEl) {
-                if (mode === 'admin') titleEl.textContent = 'แดชบอร์ดผู้ดูแล (Admin Dashboard)';
-                else if (mode === 'user') titleEl.textContent = 'ยื่นคำขอลางาน (Leave Request)';
-                else titleEl.textContent = 'เช็คอินเข้างาน (Smart Check-in)';
-            }
-
-            document.getElementById('leaveModuleSection').style.display = mode === 'user' ? 'flex' : 'none';
-            document.getElementById('leaveModuleSection').style.flexDirection = 'column';
-            document.getElementById('leaveModuleSection').style.gap = '12px';
-            document.getElementById('checkinModuleSection').style.display = mode === 'checkin' ? 'flex' : 'none';
-            document.getElementById('checkinModuleSection').style.flexDirection = 'column';
-            document.getElementById('checkinModuleSection').style.gap = '12px';
-            document.getElementById('adminSection').style.display = mode === 'admin' ? 'flex' : 'none';
-
-            if (mode === 'user') { await fetchOnlineData(); renderCalendar(); }
-            if (mode === 'checkin') { resetCheckinFlow(); }
-            if (mode === 'admin') {
-                await fetchOnlineData();
+            if (tab === 'checkin') {
+                document.getElementById('checkinModuleSection').style.display = 'flex';
+                resetCheckinFlow();
+                renderDayTimeline();
+            } else if (tab === 'pd') {
+                document.getElementById('pdPphBookWrap').style.display = 'block';
+                showBookPage('pd');
+                await loadPdTodayStatus();
+            } else if (tab === 'pph') {
+                document.getElementById('pdPphBookWrap').style.display = 'block';
+                mountPphContent();
+                showBookPage('pph');
+                await loadPphDataForToday();
+            } else if (tab === 'firstdel') {
+                document.getElementById('firstDelModuleSection').style.display = 'flex';
                 await fetchAttendanceData();
-                await loadCourierData();
-                renderAdminDashboard();
-                renderAttendanceDashboard();
-                renderCourierManagementList();
+                await loadFirstDelForToday();
+                renderFirstDelList();
+            } else if (tab === 'dashboard') {
+                document.getElementById('dashboardModuleSection').style.display = 'flex';
+                if (!dashboardUnlocked) {
+                    document.getElementById('dashboardGateBox').style.display = 'block';
+                    document.getElementById('dashboardUnlockedMount').style.display = 'none';
+                } else {
+                    document.getElementById('dashboardGateBox').style.display = 'none';
+                    mountDashboardContent();
+                    document.getElementById('dashboardUnlockedMount').style.display = 'flex';
+                    await fetchAttendanceData();
+                    renderDashboardTab();
+                }
+            } else if (tab === 'history') {
+                document.getElementById('leaveModuleSection').style.display = 'block';
+                await fetchOnlineData();
+                renderCalendar();
+            } else if (tab === 'manage') {
+                document.getElementById('adminSection').style.display = 'flex';
+                if (!adminUnlocked) {
+                    document.getElementById('adminGateBox').style.display = 'block';
+                    document.getElementById('adminUnlockedBox').style.display = 'none';
+                } else {
+                    document.getElementById('adminGateBox').style.display = 'none';
+                    document.getElementById('adminUnlockedBox').style.display = 'flex';
+                    await fetchOnlineData();
+                    await fetchAttendanceData();
+                    await loadCourierData();
+                    renderAdminDashboard();
+                    renderAttendanceDashboard();
+                    renderCourierManagementList();
+                    const reportDateField = document.getElementById("reportDate");
+                    if (reportDateField && !reportDateField.value) reportDateField.value = todayStr();
+                }
             }
         }
 
         function adminLogout() {
             if (!confirm("ยืนยันออกจากระบบผู้ดูแลใช่หรือไม่?")) return;
-            switchMode('checkin', { confirmed: true });
+            adminUnlocked = false;
+            updateAdminTabVisibility();
+            switchMainTab('checkin');
             triggerToast("ออกจากระบบผู้ดูแลแล้ว", "success");
         }
 
-        function switchAdminTab(tab) {
+        function switchAdminSubTab(tab) {
             document.getElementById('tabBtnLeave').classList.toggle('active', tab === 'leave');
             document.getElementById('tabBtnAttendance').classList.toggle('active', tab === 'attendance');
             document.getElementById('tabBtnCouriers').classList.toggle('active', tab === 'couriers');
             document.getElementById('adminCardLeave').classList.toggle('show', tab === 'leave');
             document.getElementById('adminCardAttendance').classList.toggle('show', tab === 'attendance');
             document.getElementById('adminCardCouriers').classList.toggle('show', tab === 'couriers');
-            document.getElementById('adminCardPPH').classList.toggle('show', tab === 'pph');
-            document.getElementById('adminCardDashboard').classList.toggle('show', tab === 'dashboard');
-            document.getElementById('btnPPHMode').classList.toggle('active', tab === 'pph');
-            document.getElementById('btnDashboardMode').classList.toggle('active', tab === 'dashboard');
-            if (tab === 'pph') loadPphDataForToday();
-            if (tab === 'dashboard') { fetchAttendanceData().then(renderDashboardTab); }
+        }
+
+        // ===================== PPH / DASHBOARD CONTENT MOUNTING =====================
+        // PPH and Dashboard markup live in <template> tags and get cloned into
+        // their mount points the first time each tab is opened, then reused.
+        let pphMounted = false;
+        function mountPphContent() {
+            if (pphMounted) return;
+            const tpl = document.getElementById('pphContentTemplate');
+            const mount = document.getElementById('pphContentMount');
+            mount.appendChild(tpl.content.cloneNode(true));
+            pphMounted = true;
+        }
+        let dashboardMounted = false;
+        function mountDashboardContent() {
+            if (dashboardMounted) return;
+            const tpl = document.getElementById('dashboardContentTemplate');
+            const mount = document.getElementById('dashboardUnlockedMount');
+            mount.appendChild(tpl.content.cloneNode(true));
+            const dashboardDateField = document.getElementById("dashboardDate");
+            if (dashboardDateField) dashboardDateField.value = todayStr();
+            dashboardMounted = true;
+        }
+
+        // ===================== BOOK-STYLE SWIPE: PD <-> PPH =====================
+        let currentBookPage = 'pd';
+        function showBookPage(page) {
+            currentBookPage = page;
+            document.getElementById('pdModuleSection').style.display = page === 'pd' ? 'flex' : 'none';
+            document.getElementById('pphStandaloneSection').style.display = page === 'pph' ? 'flex' : 'none';
+            document.getElementById('btnPDTab').classList.toggle('active', page === 'pd' && currentMainTab !== 'pph' || currentMainTab === 'pd');
+            document.getElementById('btnPPHTab').classList.toggle('active', page === 'pph');
+            document.getElementById('btnPDTab').classList.toggle('active', page === 'pd');
+        }
+        function setupBookSwipe() {
+            const wrap = document.getElementById('pdPphBookWrap');
+            if (!wrap) return;
+            let touchStartX = null, touchStartY = null;
+            wrap.addEventListener('touchstart', (e) => {
+                if (!e.touches || e.touches.length !== 1) return;
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+            wrap.addEventListener('touchend', (e) => {
+                if (touchStartX == null) return;
+                const touch = e.changedTouches && e.changedTouches[0];
+                if (!touch) return;
+                const dx = touch.clientX - touchStartX;
+                const dy = touch.clientY - touchStartY;
+                touchStartX = null; touchStartY = null;
+                if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+                if (dx < 0 && currentBookPage === 'pd') {
+                    mountPphContent();
+                    showBookPage('pph');
+                    loadPphDataForToday();
+                } else if (dx > 0 && currentBookPage === 'pph') {
+                    showBookPage('pd');
+                    loadPdTodayStatus();
+                }
+            }, { passive: true });
+        }
+
+        // ===================== DAY TIMELINE (check-in tab progress bar) =====================
+        function renderDayTimeline() {
+            const row = document.getElementById('dayTimelineRow');
+            if (!row) return;
+            const tStr = todayStr();
+            const myCheckin = currentCourier ? attendanceRecords.find(r => r.courier_id === currentCourier.id && r.checkin_date === tStr) : null;
+            const steps = [
+                { key:'checkin', label:'เข้างาน', target: '07:00', time: myCheckin ? myCheckin.checkin_time : null, warnAfterMin: WORK_START_HOUR*60+WORK_START_MIN },
+                { key:'pd', label:'PD Board', target: '<07:15', time: pdTodayRecord ? pdTodayRecord.captured_time : null, warnAfterMin: PD_WINDOW_END_MIN },
+                { key:'dep', label:'Departure', target: '<08:30', time: null, warnAfterMin: 8*60+30 },
+                { key:'fd', label:'First Del', target: '<09:00', time: (currentCourier && firstDelLogToday[currentCourier.id]) ? firstDelLogToday[currentCourier.id].first_del_time : null, warnAfterMin: FIRST_DEL_TARGET_MIN }
+            ];
+            row.innerHTML = '';
+            steps.forEach(s => {
+                const stepEl = document.createElement('div');
+                let stateClass = '';
+                if (s.time) {
+                    const mins = timeStrToMinutes(s.time);
+                    stateClass = (s.warnAfterMin != null && mins != null && mins > s.warnAfterMin) ? 'late' : 'done';
+                }
+                stepEl.className = `timeline-step ${stateClass}`;
+                stepEl.innerHTML = `
+                    <div class="tl-line"></div>
+                    <div class="tl-dot">${stateClass ? '<i class="fa-solid fa-check"></i>' : ''}</div>
+                    <div class="tl-label">${s.label}</div>
+                    <div class="tl-time ${stateClass==='late'?'tl-warn':''}">${s.time || s.target}</div>
+                `;
+                row.appendChild(stepEl);
+            });
         }
 
         function startLiveClock() {
@@ -1750,7 +2432,7 @@
         function updateChipsUI() {
             const box = document.getElementById("chipsBox"); box.innerHTML = '';
             if (selectedDates.length === 0) {
-                box.innerHTML = '<span style="color:var(--dhl-grey);font-size:11px;">กรุณาคลิกเลือกวันที่ว่างบนปฏิทิน...</span>'; return;
+                box.innerHTML = `<span style="color:var(--dhl-grey);font-size:11px;">${t('chips_empty_hint')}</span>`; return;
             }
             selectedDates.sort().forEach(d => {
                 const s = d.split('-');
@@ -1800,10 +2482,11 @@
             const captureBtn = document.getElementById('captureBtn');
             captureBtn.style.display = 'none';
             captureBtn.disabled = true;
-            document.getElementById('chkUniform').checked = false;
+            resetUniformToggleUI();
             resetKtbToggleUI();
             document.getElementById('successCheckinBox').classList.remove('show','late');
             stopCamera();
+            renderDayTimeline();
         }
 
         function resetKtbToggleUI() {
@@ -1812,6 +2495,23 @@
             const noneBtn = document.getElementById('btnKtbNone');
             if (hasBtn) hasBtn.classList.remove('has-selected');
             if (noneBtn) noneBtn.classList.remove('none-selected');
+        }
+
+        function resetUniformToggleUI() {
+            currentUniformStatus = null;
+            const okBtn = document.getElementById('btnUniformOk');
+            const badBtn = document.getElementById('btnUniformBad');
+            if (okBtn) okBtn.classList.remove('has-selected');
+            if (badBtn) badBtn.classList.remove('none-selected');
+        }
+
+        function selectUniformStatus(isOk) {
+            currentUniformStatus = isOk;
+            const okBtn = document.getElementById('btnUniformOk');
+            const badBtn = document.getElementById('btnUniformBad');
+            okBtn.classList.toggle('has-selected', isOk === true);
+            badBtn.classList.toggle('none-selected', isOk === false);
+            updateChecklistState();
         }
 
         function selectKtbBag(hasIt) {
@@ -1826,21 +2526,41 @@
         function updateChecklistState() {
             const captureBtn = document.getElementById('captureBtn');
             if (!captureBtn) return;
-            const uniformOk = document.getElementById('chkUniform').checked;
+            const uniformAnswered = (currentUniformStatus === true || currentUniformStatus === false);
             const ktbAnswered = (currentKtbBagStatus === true || currentKtbBagStatus === false);
-            captureBtn.disabled = !(uniformOk && ktbAnswered);
+            captureBtn.disabled = !(uniformAnswered && ktbAnswered);
+        }
+
+        function findCourierMatches(rawInput) {
+            const raw = (rawInput || '').trim().toUpperCase();
+            if (!raw) return [];
+            const exact = COURIER_LIST.find(c => c.id.toUpperCase() === raw);
+            if (exact) return [exact];
+            if (raw.length >= 2) {
+                const suffixMatches = COURIER_LIST.filter(c => c.id.toUpperCase().endsWith(raw));
+                if (suffixMatches.length > 0) return suffixMatches;
+            }
+            return [];
         }
 
         function lookupCourierId() {
             const raw = document.getElementById('checkinCourierId').value.trim().toUpperCase();
             if (!raw) { triggerToast("กรุณากรอก Courier ID", "danger"); return; }
-            const found = COURIER_LIST.find(c => c.id.toUpperCase() === raw);
-            if (!found) {
+            const matches = findCourierMatches(raw);
+            if (matches.length === 0) {
                 document.getElementById('courierProfileCard').classList.remove('show');
                 document.getElementById('cameraStepBox').style.display = 'none';
                 triggerToast("ไม่พบ Courier ID นี้ในระบบ กรุณาตรวจสอบอีกครั้ง", "danger");
                 return;
             }
+            if (matches.length > 1) {
+                document.getElementById('courierProfileCard').classList.remove('show');
+                document.getElementById('cameraStepBox').style.display = 'none';
+                triggerToast(`พบ ${matches.length} รายการที่ตรงกับ "${raw}" กรุณาพิมพ์รหัสให้ชัดเจนขึ้น (เช่น ${matches.slice(0,3).map(m=>m.id).join(', ')})`, "warning");
+                return;
+            }
+            const found = matches[0];
+            document.getElementById('checkinCourierId').value = found.id;
             currentCourier = found;
             document.getElementById('courierAvatarInit').textContent = found.name.charAt(0).toUpperCase();
             document.getElementById('courierProfileName').textContent = found.name;
@@ -1851,6 +2571,7 @@
             locBadge.style.display = 'inline-flex';
             locBadge.className = 'loc-badge pending';
             document.getElementById('locBadgeText').textContent = 'กำลังตรวจสอบ';
+            renderDayTimeline();
 
             const alreadyToday = attendanceRecords.find(r => r.courier_id === found.id && r.checkin_date === todayStr());
             if (alreadyToday) {
@@ -1886,7 +2607,7 @@
                     locBadge.className = 'loc-badge ok';
                     locBadgeText.textContent = 'ในพื้นที่';
                     document.getElementById('cameraStepBox').style.display = 'block';
-                    document.getElementById('chkUniform').checked = false;
+                    resetUniformToggleUI();
                     resetKtbToggleUI();
                     updateChecklistState();
                 } else {
@@ -1943,10 +2664,11 @@
 
         async function captureAndCheckin() {
             if (!currentCourier || !locationOk) { triggerToast("กรุณาตรวจสอบ Courier ID และตำแหน่งก่อน", "danger"); return; }
-            const uniformOk = document.getElementById('chkUniform').checked;
+            const uniformAnswered = (currentUniformStatus === true || currentUniformStatus === false);
+            const uniformOk = currentUniformStatus === true;
             const ktbAnswered = (currentKtbBagStatus === true || currentKtbBagStatus === false);
-            if (!uniformOk || !ktbAnswered) {
-                triggerToast("กรุณาติ๊กยืนยันการแต่งกาย (ยูนิฟอร์ม) และเลือกสถานะกระเป๋า KTB (มี/ไม่มี) ก่อนเช็คอิน", "danger");
+            if (!uniformAnswered || !ktbAnswered) {
+                triggerToast("กรุณาเลือกสถานะการแต่งกาย และเลือกสถานะกระเป๋า KTB (มี/ไม่มี) ก่อนเช็คอิน", "danger");
                 return;
             }
             const ktbOk = currentKtbBagStatus === true;
@@ -2005,17 +2727,21 @@
                 } else {
                     tagEl.innerHTML = `<span class="ontime-tag">ตรงเวลา</span>`;
                 }
+                const uniformSummaryHtml = uniformOk
+                    ? `<span><i class="fa-solid fa-shirt" style="color:var(--dhl-yellow)"></i> แต่งกายถูกต้อง</span>`
+                    : `<span class="missing-tag"><i class="fa-solid fa-triangle-exclamation"></i> แต่งกายไม่ถูกต้อง</span>`;
                 const ktbSummaryHtml = ktbOk
                     ? `<span><i class="fa-solid fa-bag-shopping" style="color:var(--dhl-yellow)"></i> KTB: มี</span>`
                     : `<span class="missing-tag"><i class="fa-solid fa-ban"></i> KTB: ไม่มี</span>`;
                 const vehicleLabel = currentCourier.type === '4W' ? '4W' : currentCourier.type === '2W' ? '2W' : 'ไม่ระบุ';
                 document.getElementById('successChecklistSummary').innerHTML =
-                    `<span><i class="fa-solid fa-shirt" style="color:var(--dhl-yellow)"></i> ยูนิฟอร์ม</span>
+                    `${uniformSummaryHtml}
                      ${ktbSummaryHtml}
                      <span><i class="fa-solid fa-${currentCourier.type==='2W'?'motorcycle':'truck'}" style="color:var(--dhl-yellow)"></i> ${vehicleLabel}</span>
                      <span><i class="fa-solid fa-location-dot" style="color:var(--dhl-yellow)"></i> ${currentDistance != null ? currentDistance : '-'} ม.</span>`;
                 successBox.classList.add('show');
                 await fetchAttendanceData();
+                renderDayTimeline();
                 triggerToast("เช็คอินสำเร็จ", "success");
             } catch (err) {
                 console.error(err);
@@ -2038,11 +2764,220 @@
                     document.getElementById('cameraStepBox').style.display = 'none';
                     document.getElementById('successCheckinBox').classList.add('show');
                     await fetchAttendanceData();
+                    renderDayTimeline();
                 } catch (err2) {
                     triggerToast("เช็คอินไม่สำเร็จ กรุณาลองใหม่ (ตรวจสอบว่าตั้งค่าตาราง attendance_checkins แล้ว)", "danger");
                     console.error(err2);
                 }
             }
+        }
+
+        // ===================== PD (Performance Dialog) TAB LOGIC =====================
+        function pdMinuteState(nowMin) {
+            if (nowMin <= PD_WINDOW_END_MIN) return 'ok';
+            if (nowMin <= PD_WINDOW_END_MIN + 15) return 'late';
+            return 'closed';
+        }
+        async function loadPdTodayStatus() {
+            try { pdTodayRecord = await sbSelectPdPhoto(todayStr()); } catch (err) { console.warn("loadPdTodayStatus error (create table pd_photos to persist):", err); pdTodayRecord = null; }
+            renderPdTodayStatus();
+            renderDayTimeline();
+        }
+        function renderPdTodayStatus() {
+            const box = document.getElementById('pdTodayStatusBox');
+            if (!box) return;
+            if (!pdTodayRecord) {
+                box.innerHTML = `<div class="empty-state-note">ยังไม่มีการถ่ายภาพ PD วันนี้</div>`;
+                return;
+            }
+            const nowMin = timeStrToMinutes(pdTodayRecord.captured_time) || 0;
+            const state = pdMinuteState(nowMin);
+            const badgeClass = state === 'ok' ? 'ok' : (state === 'late' ? 'late' : 'closed');
+            const badgeText = state === 'ok' ? 'ในช่วงเวลา' : (state === 'late' ? 'สาย' : 'เกินเวลามาก');
+            box.innerHTML = `
+                <div class="pd-status-row">
+                    <img class="pd-status-photo" src="${pdTodayRecord.photo_data}" alt="PD">
+                    <div class="pd-status-body">
+                        <div style="font-weight:700; font-size:13px;">ถ่ายแล้ว ${pdTodayRecord.captured_time}</div>
+                        <span class="pd-window-badge ${badgeClass}">${badgeText === 'ในช่วงเวลา' ? '✔ ' : '⚠ '}${badgeText}</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <button type="button" class="btn-dark-sm" onclick="retakePdFromStatus()"><i class="fa-solid fa-rotate-right"></i> ถ่ายใหม่</button>
+                    </div>
+                </div>`;
+        }
+        function retakePdFromStatus() { openPdCamera(); }
+
+        async function openPdCamera() {
+            try {
+                pdCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', aspectRatio: { ideal: 16/9 } }, audio: false });
+                const video = document.getElementById('pdCameraVideo');
+                video.srcObject = pdCameraStream;
+                video.style.display = 'block';
+                document.getElementById('pdCameraCanvas').style.display = 'none';
+                document.getElementById('pdPreviewImg').style.display = 'none';
+                document.getElementById('pdOpenCameraBtn').style.display = 'none';
+                document.getElementById('pdCaptureBtn').style.display = 'block';
+                document.getElementById('pdConfirmRow').style.display = 'none';
+            } catch (err) {
+                triggerToast("ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้งานกล้อง", "danger");
+                console.warn(err);
+            }
+        }
+        function stopPdCamera() {
+            if (pdCameraStream) { pdCameraStream.getTracks().forEach(t => t.stop()); pdCameraStream = null; }
+        }
+        function capturePdPhoto() {
+            const video = document.getElementById('pdCameraVideo');
+            const canvas = document.getElementById('pdCameraCanvas');
+            if (!video.videoWidth) { triggerToast("กล้องยังโหลดไม่พร้อม กรุณารอสักครู่", "warning"); return; }
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            pdPendingPhotoDataUrl = resizeImageDataUrl(canvas, 1280, 0.82);
+            const previewImg = document.getElementById('pdPreviewImg');
+            previewImg.src = pdPendingPhotoDataUrl;
+            previewImg.style.display = 'block';
+            video.style.display = 'none';
+            stopPdCamera();
+            document.getElementById('pdCaptureBtn').style.display = 'none';
+            document.getElementById('pdConfirmRow').style.display = 'flex';
+        }
+        function retakePdPhoto() {
+            pdPendingPhotoDataUrl = null;
+            document.getElementById('pdPreviewImg').style.display = 'none';
+            document.getElementById('pdConfirmRow').style.display = 'none';
+            openPdCamera();
+        }
+        async function confirmSavePdPhoto() {
+            if (!pdPendingPhotoDataUrl) { triggerToast("ยังไม่มีภาพที่ถ่าย", "danger"); return; }
+            const now = new Date();
+            const capturedTimeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            const nowMin = now.getHours()*60 + now.getMinutes();
+            const state = pdMinuteState(nowMin);
+            try {
+                await sbUpsertPdPhoto({
+                    pd_date: todayStr(),
+                    photo_data: pdPendingPhotoDataUrl,
+                    captured_time: capturedTimeStr,
+                    status: state
+                });
+                triggerToast("บันทึกภาพ PD สำเร็จแล้ว", "success");
+                pdPendingPhotoDataUrl = null;
+                document.getElementById('pdConfirmRow').style.display = 'none';
+                document.getElementById('pdOpenCameraBtn').style.display = 'inline-block';
+                document.getElementById('pdPreviewImg').style.display = 'none';
+                await loadPdTodayStatus();
+            } catch (err) {
+                console.error(err);
+                triggerToast("บันทึกไม่สำเร็จ กรุณาสร้างตาราง pd_photos ใน Supabase ก่อน (pd_date, photo_data, captured_time, status)", "danger");
+            }
+        }
+
+        // ===================== FIRST DEL TAB LOGIC =====================
+        function renderFirstDelList() {
+            const box = document.getElementById('firstDelList');
+            if (!box) return;
+            let todaysCouriers = attendanceRecords.filter(r => r.checkin_date === todayStr());
+            const kwField = document.getElementById('fdSearchBox');
+            const kw = kwField ? kwField.value.trim().toUpperCase() : '';
+            if (kw) {
+                todaysCouriers = todaysCouriers.filter(c =>
+                    c.courier_id.toUpperCase().includes(kw) ||
+                    (c.emp_name || '').toUpperCase().includes(kw) ||
+                    (c.vendor || '').toUpperCase().includes(kw)
+                );
+            }
+            if (todaysCouriers.length === 0) {
+                box.innerHTML = `<div class="empty-state-note">${kw ? t('fd_no_search_result') : t('fd_no_checkin_today')}</div>`;
+                return;
+            }
+            box.innerHTML = '';
+            todaysCouriers
+                .slice()
+                .sort((a,b) => a.courier_id.localeCompare(b.courier_id))
+                .forEach(c => {
+                    const rec = firstDelLogToday[c.courier_id] || { first_del_time: null, stem_out_minutes: null };
+                    const depTime = getCourierDepartureTimeFromPph(c.courier_id);
+                    const item = document.createElement('div');
+                    item.className = 'fd-list-item';
+                    let stemTagHtml = `<span class="fd-stem-tag pending">${t('fd_not_saved_yet')}</span>`;
+                    if (rec.first_del_time) {
+                        const stemMin = rec.stem_out_minutes;
+                        const isLate = timeStrToMinutes(rec.first_del_time) != null && timeStrToMinutes(rec.first_del_time) > FIRST_DEL_TARGET_MIN;
+                        stemTagHtml = `<span class="fd-stem-tag ${isLate ? 'late' : 'ok'}">${isLate ? '✗' : '✔'} ${rec.first_del_time}${stemMin != null ? ' · ' + t('fd_stem_out_label') + ' ' + stemMin + ' ' + t('unit_minutes') : ''}</span>`;
+                    }
+                    item.innerHTML = `
+                        <div class="fd-list-top">
+                            <div>
+                                <div class="fd-list-name">${c.emp_name} · ${c.courier_id}</div>
+                                <div class="fd-list-meta">${c.vendor || '-'} · DEP ${depTime || '-'}</div>
+                            </div>
+                            ${stemTagHtml}
+                        </div>
+                        <div class="fd-time-row">
+                            <input type="text" inputmode="numeric" maxlength="5" id="fdTimeInput_${c.courier_id}" value="${rec.first_del_time || ''}" placeholder="${t('fd_time_placeholder')}" class="form-input" style="text-align:center; letter-spacing:1px;">
+                            <button type="button" class="btn-secondary-yellow" onclick="saveFirstDelTime('${c.courier_id}')"><i class="fa-solid fa-floppy-disk"></i> ${t('btn_save')}</button>
+                            ${rec.first_del_time ? `<button type="button" class="btn-delete-sm" onclick="clearFirstDelTime('${c.courier_id}')"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                        </div>
+                    `;
+                    box.appendChild(item);
+                });
+        }
+        function getCourierDepartureTimeFromPph(courierId) {
+            if (!pphData || !pphData.route_log || !pphData.route_log[courierId]) return null;
+            return pphData.route_log[courierId].dep || null;
+        }
+        function parseTypedTimeInput(raw) {
+            if (!raw) return null;
+            let s = raw.trim();
+            if (!s) return null;
+            s = s.replace(/[.\-]/g, ':');
+            let h, m;
+            if (s.includes(':')) {
+                const parts = s.split(':');
+                h = parseInt(parts[0], 10);
+                m = parseInt(parts[1], 10);
+            } else {
+                const digits = s.replace(/\D/g, '');
+                if (digits.length === 3) { h = parseInt(digits.slice(0,1),10); m = parseInt(digits.slice(1),10); }
+                else if (digits.length === 4) { h = parseInt(digits.slice(0,2),10); m = parseInt(digits.slice(2),10); }
+                else if (digits.length >= 1 && digits.length <= 2) { h = parseInt(digits,10); m = 0; }
+                else return null;
+            }
+            if (isNaN(h) || isNaN(m) || h < 0 || h > 23 || m < 0 || m > 59) return null;
+            return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+        }
+        async function saveFirstDelTime(courierId) {
+            const input = document.getElementById(`fdTimeInput_${courierId}`);
+            if (!input || !input.value.trim()) { triggerToast("กรุณาพิมพ์เวลาก่อนบันทึก (เช่น 0905)", "danger"); return; }
+            const timeVal = parseTypedTimeInput(input.value);
+            if (!timeVal) { triggerToast("รูปแบบเวลาไม่ถูกต้อง กรุณาพิมพ์เช่น 0905 หรือ 09:05", "danger"); return; }
+            input.value = timeVal;
+            const depTime = getCourierDepartureTimeFromPph(courierId);
+            let stemMinutes = null;
+            if (depTime) {
+                const depMin = timeStrToMinutes(depTime);
+                const fdMin = timeStrToMinutes(timeVal);
+                if (depMin != null && fdMin != null) {
+                    let diff = fdMin - depMin;
+                    if (diff < 0) diff += 24*60;
+                    stemMinutes = diff;
+                }
+            }
+            firstDelLogToday[courierId] = { first_del_time: timeVal, stem_out_minutes: stemMinutes };
+            try {
+                await sbUpsertFirstDel({ fd_date: todayStr(), courier_id: courierId, first_del_time: timeVal, stem_out_minutes: stemMinutes });
+                triggerToast("บันทึกเวลา First Del สำเร็จ", "success");
+            } catch (err) {
+                console.error(err);
+                triggerToast("บันทึกลงฐานข้อมูลไม่สำเร็จ (สร้างตาราง first_del_log ก่อน) — บันทึกไว้ชั่วคราวในหน้าจอแล้ว", "warning");
+            }
+            renderFirstDelList();
+        }
+        async function clearFirstDelTime(courierId) {
+            delete firstDelLogToday[courierId];
+            try { await sbUpsertFirstDel({ fd_date: todayStr(), courier_id: courierId, first_del_time: null, stem_out_minutes: null }); } catch (err) { console.warn(err); }
+            renderFirstDelList();
         }
 
         async function refreshAdminData() {
@@ -2065,6 +3000,7 @@
         function renderAdminDashboard() {
             updateAdminStatCards();
             const listBox = document.getElementById("adminTableBody");
+            if (!listBox) return;
             listBox.innerHTML = '';
             const filterKeyword = document.getElementById("searchEmpId").value.trim().toLowerCase();
             const showHistory = document.getElementById("showHistoryLeave").checked;
@@ -2130,6 +3066,7 @@
 
         function renderAttendanceDashboard() {
             const listBox = document.getElementById("attendanceTableBody");
+            if (!listBox) return;
             listBox.innerHTML = '';
             const filterKeyword = document.getElementById("searchCourierId").value.trim().toLowerCase();
             const filterDate = document.getElementById("filterDate").value;
@@ -2150,8 +3087,8 @@
                 const statusClass = isLate ? 'status-late' : 'status-ontime';
                 const statusLabel = isLate ? `Late ${item.late_minutes} นาที` : 'ตรงเวลา';
                 const uniformBadge = item.uniform_ok
-                    ? `<span class="status-badge status-ok-mini"><i class="fa-solid fa-shirt"></i> ยูนิฟอร์ม</span>`
-                    : `<span class="status-badge status-fail-mini"><i class="fa-solid fa-xmark"></i> ไม่มีข้อมูล</span>`;
+                    ? `<span class="status-badge status-ok-mini"><i class="fa-solid fa-shirt"></i> แต่งกายถูกต้อง</span>`
+                    : `<span class="status-badge status-fail-mini"><i class="fa-solid fa-shirt"></i> แต่งกายไม่ถูกต้อง</span>`;
                 const ktbBadge = item.ktb_bag_ok
                     ? `<span class="status-badge status-ok-mini"><i class="fa-solid fa-bag-shopping"></i> KTB มี</span>`
                     : `<span class="status-badge status-warn-mini"><i class="fa-solid fa-ban"></i> KTB ไม่มี</span>`;
@@ -2213,6 +3150,28 @@
             }
 
             msg += `\n🟢 มาตรงเวลา: ${onTimeToday.length} คน\n`;
+            if (onTimeToday.length > 0) {
+                onTimeToday.forEach(r => { msg += `- ${r.emp_name} (${r.courier_id})\n`; });
+            }
+
+            let pdLine = 'ยังไม่มีข้อมูล';
+            if (pdTodayRecord && pdTodayRecord.pd_date === dateStr) {
+                pdLine = `ถ่ายแล้วเวลา ${pdTodayRecord.captured_time} (${pdTodayRecord.status === 'ok' ? 'ในช่วงเวลา' : pdTodayRecord.status === 'late' ? 'สาย' : 'เกินเวลามาก'})`;
+            } else if (dateStr !== todayStr()) {
+                pdLine = 'ดูรายละเอียดที่หน้า PD';
+            } else {
+                pdLine = 'ยังไม่ถ่ายภาพ PD วันนี้';
+            }
+            msg += `\n📸 PD วันนี้: ${pdLine}\n`;
+
+            const fdEntries = Object.entries(firstDelLogToday).filter(([, v]) => v.first_del_time);
+            msg += `\n🚚 First Del บันทึกแล้ว: ${fdEntries.length} คน\n`;
+            fdEntries.forEach(([cid, v]) => {
+                const c = COURIER_LIST.find(x => x.id === cid);
+                const late = timeStrToMinutes(v.first_del_time) != null && timeStrToMinutes(v.first_del_time) > FIRST_DEL_TARGET_MIN;
+                msg += `- ${c ? c.name : cid} (${cid}) | ${v.first_del_time} ${late ? '(เกินเป้า 09:00)' : '(ตรงเป้า)'}\n`;
+            });
+
             msg += `\n--\nส่งอัตโนมัติจากระบบ DHL Smart Leave & Check-in`;
             return msg;
         }
@@ -2223,6 +3182,11 @@
                 .replace(/"/g, '&quot;');
         }
 
+        function splitEmpNameForEmail(full) {
+            const parts = (full || '-').trim().split(/\s+/);
+            return { first: parts[0] || '-', last: parts.slice(1).join(' ') || '-' };
+        }
+
         function buildDailySummaryHtml(dateStr) {
             const s = dateStr.split('-');
             const thDate = `${s[2]}/${s[1]}/${s[0]}`;
@@ -2230,91 +3194,113 @@
             const lateToday = attendanceRecords.filter(r => r.checkin_date === dateStr && r.status === 'Late');
             const onTimeToday = attendanceRecords.filter(r => r.checkin_date === dateStr && r.status === 'On time');
 
-            const rowsOrEmpty = (rows, colspan, emptyLabel) => rows.length
-                ? rows
-                : [`<tr><td colspan="${colspan}" style="padding:14px 10px;text-align:center;color:#94a3b8;font-size:12px;">${emptyLabel}</td></tr>`];
+            const lateRowsHtml = lateToday.length ? lateToday.map(r => {
+                const n = splitEmpNameForEmail(r.emp_name);
+                return `<tr>
+                    <td style="padding:8px 10px;border-bottom:1px solid #fecaca;font-size:12px;color:#1a202c;">${escapeHtmlForEmail(n.first)}</td>
+                    <td style="padding:8px 10px;border-bottom:1px solid #fecaca;font-size:12px;color:#1a202c;">${escapeHtmlForEmail(n.last)}</td>
+                    <td style="padding:8px 10px;border-bottom:1px solid #fecaca;font-size:12px;color:#4a5568;">${escapeHtmlForEmail(r.courier_id)}</td>
+                    <td style="padding:8px 10px;border-bottom:1px solid #fecaca;font-size:12px;color:#4a5568;">${escapeHtmlForEmail(r.checkin_time)}</td>
+                    <td style="padding:8px 10px;border-bottom:1px solid #fecaca;font-size:12px;color:#b91c1c;font-weight:700;">${r.late_minutes} นาที</td>
+                    <td style="padding:8px 10px;border-bottom:1px solid #fecaca;font-size:12px;color:#4a5568;">${escapeHtmlForEmail(r.vendor || '-')}</td>
+                </tr>`;
+            }).join('') : `<tr><td colspan="6" style="padding:14px;text-align:center;color:#94a3b8;font-size:12px;">ไม่มีผู้มาสายวันนี้</td></tr>`;
 
-            const leaveRowsHtml = rowsOrEmpty(leaveToday.map(r => `
+            const leaveRowsHtml = leaveToday.length ? leaveToday.map(r => `
                 <tr>
-                    <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:12px;color:#1a202c;font-weight:600;">${escapeHtmlForEmail(r.emp_name)}</td>
-                    <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;color:#718096;">${escapeHtmlForEmail(r.emp_id)}</td>
-                    <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;">
+                    <td style="padding:8px 10px;border-bottom:1px solid #fde68a;font-size:12px;font-weight:600;color:#1a202c;">${escapeHtmlForEmail(r.emp_name)} (${escapeHtmlForEmail(r.emp_id)})</td>
+                    <td style="padding:8px 10px;border-bottom:1px solid #fde68a;font-size:12px;">
                         <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:700;background:${r.status==='Approved'?'#d1fae5':r.status==='Rejected'?'#fee2e2':'#fef3c7'};color:${r.status==='Approved'?'#065f46':r.status==='Rejected'?'#991b1b':'#b45309'};">${escapeHtmlForEmail(r.status)}</span>
                     </td>
-                    <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;color:#4a5568;">${escapeHtmlForEmail(r.reason || '-')}</td>
-                </tr>`), 4, 'ไม่มีผู้ลางานในวันนี้').join('');
+                    <td style="padding:8px 10px;border-bottom:1px solid #fde68a;font-size:12px;color:#4a5568;">${escapeHtmlForEmail(r.reason || '-')}</td>
+                </tr>`).join('') : `<tr><td colspan="3" style="padding:14px;text-align:center;color:#a16207;font-size:12px;">ไม่มีผู้ลางานในวันนี้</td></tr>`;
 
-            const lateRowsHtml = rowsOrEmpty(lateToday.map(r => `
-                <tr>
-                    <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:12px;color:#1a202c;font-weight:600;">${escapeHtmlForEmail(r.emp_name)}</td>
-                    <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;color:#718096;">${escapeHtmlForEmail(r.courier_id)}</td>
-                    <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;color:#4a5568;">${escapeHtmlForEmail(r.checkin_time)}</td>
-                    <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;">
-                        <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:700;background:#ffedd5;color:#9a3412;">สาย ${r.late_minutes} นาที</span>
-                    </td>
-                    <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;color:#718096;">${escapeHtmlForEmail(r.vendor || '-')}</td>
-                </tr>`), 5, 'ไม่มีผู้มาสายในวันนี้').join('');
+            const onTimeListHtml = onTimeToday.length
+                ? onTimeToday.map(r => `<div style="padding:3px 0;font-size:12.5px;color:#065f46;">&#9679;&nbsp; ${escapeHtmlForEmail(r.emp_name)} (${escapeHtmlForEmail(r.courier_id)})</div>`).join('')
+                : `<div style="padding:3px 0;font-size:12px;color:#94a3b8;">ไม่มีผู้มาตรงเวลา</div>`;
+
+            const pdBlockHtml = (pdTodayRecord && pdTodayRecord.pd_date === dateStr)
+                ? `<div style="padding:12px 14px;font-size:12.5px;color:#4a5568;">ถ่ายแล้วเวลา <b>${escapeHtmlForEmail(pdTodayRecord.captured_time)}</b> (${pdTodayRecord.status === 'ok' ? 'ในช่วงเวลา' : pdTodayRecord.status === 'late' ? 'สาย' : 'เกินเวลามาก'})</div>`
+                : `<div style="padding:12px 14px;font-size:12.5px;color:#94a3b8;">ไม่มีข้อมูล PD สำหรับวันที่นี้</div>`;
+
+            const fdEntries = Object.entries(firstDelLogToday).filter(([, v]) => v.first_del_time);
+            const fdRowsHtml = fdEntries.length ? fdEntries.map(([cid, v]) => {
+                const c = COURIER_LIST.find(x => x.id === cid);
+                const late = timeStrToMinutes(v.first_del_time) != null && timeStrToMinutes(v.first_del_time) > FIRST_DEL_TARGET_MIN;
+                return `<tr>
+                    <td style="padding:8px 10px;border-bottom:1px solid #cffafe;font-size:12px;color:#1a202c;">${escapeHtmlForEmail(c ? c.name : cid)} (${escapeHtmlForEmail(cid)})</td>
+                    <td style="padding:8px 10px;border-bottom:1px solid #cffafe;font-size:12px;color:${late?'#b91c1c':'#065f46'};font-weight:700;">${escapeHtmlForEmail(v.first_del_time)} ${late ? '(เกินเป้า)' : '(ตรงเป้า)'}</td>
+                    <td style="padding:8px 10px;border-bottom:1px solid #cffafe;font-size:12px;color:#4a5568;">${v.stem_out_minutes != null ? v.stem_out_minutes + ' นาที' : '-'}</td>
+                </tr>`;
+            }).join('') : `<tr><td colspan="3" style="padding:14px;text-align:center;color:#94a3b8;font-size:12px;">ยังไม่มีการบันทึก First Del</td></tr>`;
 
             return `
-<div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#faf8f2;padding:16px;">
-  <div style="background:#1a202c;border-radius:10px 10px 0 0;padding:16px 18px;border-bottom:4px solid #FFCC00;">
-    <span style="display:inline-block;background:#FFCC00;color:#D40511;font-weight:900;font-size:16px;padding:2px 10px;border-radius:4px;letter-spacing:-1px;">DHL</span>
-    <span style="color:#ffffff;font-size:14px;font-weight:700;margin-left:10px;">สรุปรายงานประจำวัน</span>
-    <div style="color:#FFCC00;font-size:12px;font-weight:600;margin-top:6px;">วันที่ ${thDate}</div>
+<div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
+  <div style="background:#FFCC00;padding:22px 16px 8px;text-align:center;">
+    <div style="font-family:Arial Black,Arial,sans-serif;font-weight:900;color:#D40511;font-size:34px;letter-spacing:-1px;">DHL</div>
+  </div>
+  <div style="background:#FFCC00;padding:6px 16px 16px;text-align:center;">
+    <span style="font-weight:800;font-size:14px;color:#1a202c;">[รายงานสรุปสถานะพนักงานประจำวันที่ ${thDate}]</span>
   </div>
 
-  <div style="background:#ffffff;padding:14px 18px;display:flex;">
-    <table role="presentation" width="100%" style="border-collapse:collapse;">
-      <tr>
-        <td style="width:33%;text-align:center;padding:6px;">
-          <div style="font-size:22px;font-weight:700;color:#dd6b20;">${leaveToday.length}</div>
-          <div style="font-size:10.5px;color:#718096;font-weight:600;">คนลางาน</div>
-        </td>
-        <td style="width:33%;text-align:center;padding:6px;border-left:1px solid #edf2f7;border-right:1px solid #edf2f7;">
-          <div style="font-size:22px;font-weight:700;color:#e53e3e;">${lateToday.length}</div>
-          <div style="font-size:10.5px;color:#718096;font-weight:600;">คนมาสาย</div>
-        </td>
-        <td style="width:33%;text-align:center;padding:6px;">
-          <div style="font-size:22px;font-weight:700;color:#38a169;">${onTimeToday.length}</div>
-          <div style="font-size:10.5px;color:#718096;font-weight:600;">คนตรงเวลา</div>
-        </td>
-      </tr>
-    </table>
+  <div style="background:#D40511;padding:9px 14px;"><span style="color:#fff;font-weight:700;font-size:13px;">Late Arrivals (พนักงานมาสาย)</span></div>
+  <table role="presentation" width="100%" style="border-collapse:collapse;">
+    <thead><tr style="background:#fff1f1;">
+      <th style="padding:6px 10px;text-align:left;font-size:10.5px;color:#7f1d1d;">ชื่อ</th>
+      <th style="padding:6px 10px;text-align:left;font-size:10.5px;color:#7f1d1d;">นามสกุล</th>
+      <th style="padding:6px 10px;text-align:left;font-size:10.5px;color:#7f1d1d;">รหัส</th>
+      <th style="padding:6px 10px;text-align:left;font-size:10.5px;color:#7f1d1d;">เวลาที่เข้างาน</th>
+      <th style="padding:6px 10px;text-align:left;font-size:10.5px;color:#7f1d1d;">เวลาที่สาย</th>
+      <th style="padding:6px 10px;text-align:left;font-size:10.5px;color:#7f1d1d;">Vendor</th>
+    </tr></thead>
+    <tbody>${lateRowsHtml}</tbody>
+  </table>
+
+  <div style="background:#FFCC00;padding:9px 14px;margin-top:16px;"><span style="color:#1a202c;font-weight:700;font-size:13px;">Leaves &amp; Absences (พนักงานลา/หยุดงาน)</span></div>
+  <table role="presentation" width="100%" style="border-collapse:collapse;">
+    <tbody>${leaveRowsHtml}</tbody>
+  </table>
+
+  <div style="background:#38a169;padding:9px 14px;margin-top:16px;"><span style="color:#fff;font-weight:700;font-size:13px;">On Time (มาตรงเวลา)</span></div>
+  <div style="padding:12px 14px;">
+    <div style="font-size:12.5px;color:#065f46;font-weight:700;margin-bottom:6px;">จำนวน: ${onTimeToday.length} คน</div>
+    ${onTimeListHtml}
   </div>
 
-  <div style="background:#ffffff;padding:0 18px 18px;">
-    <div style="font-size:13px;font-weight:700;color:#1a202c;padding:10px 0 8px;border-top:1px solid #f1f5f9;">🟠 รายชื่อผู้ลางาน</div>
-    <table role="presentation" width="100%" style="border-collapse:collapse;border:1px solid #edf2f7;border-radius:6px;overflow:hidden;">
-      <thead>
-        <tr style="background:#f7fafc;">
-          <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#718096;font-weight:700;">ชื่อ</th>
-          <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#718096;font-weight:700;">รหัส</th>
-          <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#718096;font-weight:700;">สถานะ</th>
-          <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#718096;font-weight:700;">เหตุผล</th>
-        </tr>
-      </thead>
-      <tbody>${leaveRowsHtml}</tbody>
-    </table>
+  <div style="background:#7c3aed;padding:9px 14px;margin-top:16px;"><span style="color:#fff;font-weight:700;font-size:13px;">PD Performance Dialog</span></div>
+  ${pdBlockHtml}
 
-    <div style="font-size:13px;font-weight:700;color:#1a202c;padding:16px 0 8px;">🔴 รายชื่อผู้มาสาย</div>
-    <table role="presentation" width="100%" style="border-collapse:collapse;border:1px solid #edf2f7;border-radius:6px;overflow:hidden;">
-      <thead>
-        <tr style="background:#f7fafc;">
-          <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#718096;font-weight:700;">ชื่อ</th>
-          <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#718096;font-weight:700;">Courier ID</th>
-          <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#718096;font-weight:700;">เวลาเข้างาน</th>
-          <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#718096;font-weight:700;">สาย</th>
-          <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#718096;font-weight:700;">Vendor</th>
-        </tr>
-      </thead>
-      <tbody>${lateRowsHtml}</tbody>
-    </table>
-  </div>
+  <div style="background:#0891b2;padding:9px 14px;margin-top:16px;"><span style="color:#fff;font-weight:700;font-size:13px;">First Delivery (Stem Out)</span></div>
+  <table role="presentation" width="100%" style="border-collapse:collapse;">
+    <thead><tr style="background:#ecfeff;">
+      <th style="padding:6px 10px;text-align:left;font-size:10.5px;color:#155e75;">ชื่อ / รหัส</th>
+      <th style="padding:6px 10px;text-align:left;font-size:10.5px;color:#155e75;">เวลา First Del</th>
+      <th style="padding:6px 10px;text-align:left;font-size:10.5px;color:#155e75;">Stem Out</th>
+    </tr></thead>
+    <tbody>${fdRowsHtml}</tbody>
+  </table>
 
-  <div style="background:#1a202c;border-radius:0 0 10px 10px;padding:10px 18px;text-align:center;">
+  <div style="padding:14px;text-align:center;border-top:1px solid #e2e8f0;margin-top:6px;">
     <span style="color:#94a3b8;font-size:10.5px;">ส่งอัตโนมัติจากระบบ DHL Smart Leave &amp; Check-in</span>
   </div>
 </div>`.trim();
+        }
+
+        function renderReportSummaryChips() {
+            const box = document.getElementById('reportSummaryChips');
+            if (!box) return;
+            const dateStr = document.getElementById('reportDate').value || todayStr();
+            const leaveCount = onlineDatabaseRecords.filter(r => r.leave_date === dateStr).length;
+            const lateCount = attendanceRecords.filter(r => r.checkin_date === dateStr && r.status === 'Late').length;
+            const onTimeCount = attendanceRecords.filter(r => r.checkin_date === dateStr && r.status === 'On time').length;
+            const fdCount = Object.values(firstDelLogToday).filter(v => v.first_del_time).length;
+            box.innerHTML = `
+                <span class="report-summary-chip">ลา ${leaveCount}</span>
+                <span class="report-summary-chip">สาย ${lateCount}</span>
+                <span class="report-summary-chip">ตรงเวลา ${onTimeCount}</span>
+                <span class="report-summary-chip">PD ${pdTodayRecord ? '✔' : '—'}</span>
+                <span class="report-summary-chip">First Del ${fdCount}</span>
+            `;
         }
 
         function previewDailyReport() {
@@ -2324,6 +3310,7 @@
             previewBox.style.whiteSpace = 'normal';
             previewBox.innerHTML = buildDailySummaryHtml(dateStr);
             previewBox.classList.add('show');
+            renderReportSummaryChips();
         }
 
         function openMailtoReport() {
@@ -2413,7 +3400,7 @@
             document.getElementById('courierFormVendor').value = c.vendor || '';
             document.getElementById('courierEditDbId').value = c.dbId || '';
             selectVehicleType(c.type || '');
-            switchAdminTab('couriers');
+            switchAdminSubTab('couriers');
             const idField = document.getElementById('courierFormId');
             if (idField) idField.scrollIntoView({ behavior: 'smooth', block: 'center' });
             triggerToast(`กำลังแก้ไขข้อมูล ${c.name}`, 'success');
@@ -2497,6 +3484,8 @@
 
         async function loadPphDataForToday() {
             const dateStr = todayStr();
+            pphVoiceActiveCourierId = null;
+            pphVoiceActiveField = null;
             try {
                 const row = await sbSelectPphDaily(dateStr);
                 if (row) {
@@ -2517,7 +3506,9 @@
                 console.warn("loadPphDataForToday error (table may not exist yet):", err);
             }
             pphLastSavedSnapshot = JSON.stringify(pphData);
-            document.getElementById('pphStaffCount').value = pphData.staff_count;
+            const staffEl = document.getElementById('pphStaffCount');
+            if (!staffEl) return; // template not mounted yet
+            staffEl.value = pphData.staff_count;
             document.getElementById('pphSorterCount').value = pphData.sorter_count;
             document.getElementById('pphNewParcels').value = pphData.new_parcels;
             document.getElementById('pphOldParcels').value = pphData.old_parcels;
@@ -2586,8 +3577,10 @@
         }
 
         function pullCourierCountFromCheckin(skipRender) {
+            const el = document.getElementById('pphCourierCount');
+            if (!el) return;
             const todaysCouriers = attendanceRecords.filter(r => r.checkin_date === todayStr());
-            document.getElementById('pphCourierCount').value = todaysCouriers.length;
+            el.value = todaysCouriers.length;
             document.getElementById('pphCourierCountLabel').textContent = `Courier (เช็คอินแล้ว ${todaysCouriers.length} คน)`;
             pphData._courierCountOverride = todaysCouriers.length;
             if (!skipRender) { computeAndRenderPph(); savePphDataDebounced(); }
@@ -2639,20 +3632,33 @@
         function renderPphRouteCourierList() {
             const box = document.getElementById('pphRouteCourierList');
             if (!box) return;
-            const todaysCouriers = attendanceRecords.filter(r => r.checkin_date === todayStr());
+            let todaysCouriers = attendanceRecords.filter(r => r.checkin_date === todayStr());
+            const searchField = document.getElementById('pphRouteSearchBox');
+            const kw = searchField ? searchField.value.trim().toUpperCase() : '';
+            if (kw) {
+                todaysCouriers = todaysCouriers.filter(c =>
+                    c.courier_id.toUpperCase().includes(kw) ||
+                    (c.emp_name || '').toUpperCase().includes(kw)
+                );
+            }
             if (todaysCouriers.length === 0) {
-                box.innerHTML = `<div class="empty-state-note">ยังไม่มี Courier เช็คอินวันนี้</div>`;
+                box.innerHTML = `<div class="empty-state-note">${kw ? 'ไม่พบรายชื่อที่ค้นหา' : 'ยังไม่มี Courier เช็คอินวันนี้'}</div>`;
                 return;
             }
             box.innerHTML = '';
             todaysCouriers.forEach(c => {
                 const rec = pphData.route_log[c.courier_id] || { fs: null, dep: null };
+                const isVoiceActive = pphVoiceActiveCourierId === c.courier_id && pphVoiceActiveField;
                 const row = document.createElement('div');
                 row.className = 'attendance-card';
+                if (isVoiceActive) { row.style.borderLeftColor = '#2563eb'; row.style.background = '#eff6ff'; }
+                const voiceTagHtml = isVoiceActive
+                    ? ` <span class="status-badge" style="background:#dbeafe; color:#1d4ed8;"><i class="fa-solid fa-microphone"></i> รอฟัง: ${pphVoiceActiveField.toUpperCase()}</span>`
+                    : '';
                 row.innerHTML = `
                     <div class="attendance-card-avatar">${(c.emp_name||'?').charAt(0).toUpperCase()}</div>
                     <div class="attendance-card-body">
-                        <div class="attendance-card-name">${c.emp_name} · ${c.courier_id}</div>
+                        <div class="attendance-card-name">${c.emp_name} · ${c.courier_id}${voiceTagHtml}</div>
                         <div class="attendance-card-tags" style="margin-top:6px;">
                             <button type="button" class="btn-secondary-yellow" style="min-height:34px; padding:5px 10px;" onclick="tapPphRouteTime('${c.courier_id}','fs')">FS ${rec.fs ? rec.fs : '- -:--'}</button>
                             <button type="button" class="btn-dark-sm" style="min-height:34px;" onclick="tapPphRouteTime('${c.courier_id}','dep')">DEP ${rec.dep ? rec.dep : '- -:--'}</button>
@@ -2676,11 +3682,14 @@
             renderPphRouteCourierList();
             computeAndRenderPph();
             savePphDataDebounced();
+            if (currentMainTab === 'firstdel') renderFirstDelList();
         }
 
         // ===================== PPH VOICE ENTRY (resilient, continuous) =====================
         let pphVoiceMatchedAnything = false;
-        let pphVoiceLastProcessedText = '';
+        let pphVoiceProcessedLength = 0;
+        let pphVoiceActiveCourierId = null;
+        let pphVoiceActiveField = null; // 'fs' | 'dep' | null
 
         function togglePphVoiceEntry() {
             if (isRecognitionSessionActive()) {
@@ -2696,14 +3705,16 @@
             const btn = document.getElementById('pphVoiceBtn');
             const label = document.getElementById('pphVoiceBtnLabel');
             const caption = document.getElementById('pphVoiceCaption');
+            const retryNote = document.getElementById('pphVoiceRetryNote');
             if (btn) btn.classList.toggle('voice-listening-active', isListening);
             if (label) label.textContent = isListening
                 ? 'กำลังฟัง... แตะเพื่อหยุด'
-                : 'พูดเพื่อบันทึกเวลา (เช่น "T05 F 09 30 D 10 40")';
+                : 'พูดเพื่อบันทึกเวลา (พูดรหัส เช่น "T05" แล้วพูดเวลา)';
             if (caption) {
                 caption.classList.toggle('show', isListening);
                 if (!isListening) caption.textContent = '';
             }
+            if (retryNote) retryNote.classList.toggle('show', isListening);
         }
 
         function startPphVoiceEntry() {
@@ -2716,20 +3727,28 @@
                 return;
             }
             pphVoiceMatchedAnything = false;
-            pphVoiceLastProcessedText = '';
+            pphVoiceProcessedLength = 0;
             setPphVoiceUiListening(true);
-            triggerToast('🎤 กำลังฟัง... พูดเช่น "T05 F 09 30 D 10 40" (พูดค้างได้ ระบบฟังต่อเนื่องเอง)', "success");
+            triggerToast('🎤 กำลังฟัง... พูดรหัสเช่น "T05" แล้วพูดเวลา เช่น "10 00" (พูดช้า ๆ ชัด ๆ เพื่อลดโอกาสฟังเพี้ยน)', "success");
 
             startResilientRecognition({
-                lang: 'th-TH',
-                maxDurationMs: 20000,
+                lang: 'en-US',
+                maxDurationMs: 25000,
+                maxAlternatives: 8,
+                altMatcher: (alt) => pphTranscriptLooksValid(alt),
                 onUpdate: (finalText, interimText) => {
                     const caption = document.getElementById('pphVoiceCaption');
-                    if (caption) caption.textContent = (finalText + ' ' + interimText).trim() || '...';
-                    if (finalText && finalText !== pphVoiceLastProcessedText) {
-                        pphVoiceLastProcessedText = finalText;
-                        const applied = applyPphVoiceCommand(finalText, true);
-                        if (applied) pphVoiceMatchedAnything = true;
+                    if (caption) {
+                        const tail = (finalText + ' ' + interimText).trim().split(/\s+/).slice(-12).join(' ');
+                        caption.textContent = tail || '...';
+                    }
+                    if (finalText.length > pphVoiceProcessedLength) {
+                        const delta = finalText.slice(pphVoiceProcessedLength).trim();
+                        pphVoiceProcessedLength = finalText.length;
+                        if (delta) {
+                            const applied = applyPphVoiceCommand(delta, true);
+                            if (applied) pphVoiceMatchedAnything = true;
+                        }
                     }
                 },
                 onError: (type) => {
@@ -2742,12 +3761,16 @@
                 },
                 onDone: (finalText) => {
                     setPphVoiceUiListening(false);
-                    if (finalText && finalText !== pphVoiceLastProcessedText) {
-                        const applied = applyPphVoiceCommand(finalText, true);
-                        if (applied) pphVoiceMatchedAnything = true;
+                    if (finalText.length > pphVoiceProcessedLength) {
+                        const delta = finalText.slice(pphVoiceProcessedLength).trim();
+                        pphVoiceProcessedLength = finalText.length;
+                        if (delta) {
+                            const applied = applyPphVoiceCommand(delta, true);
+                            if (applied) pphVoiceMatchedAnything = true;
+                        }
                     }
                     if (!pphVoiceMatchedAnything) {
-                        triggerToast(`ไม่เข้าใจคำสั่งเสียง กรุณาลองพูดใหม่ เช่น "T05 F 09 30 D 10 40" (พูดคำว่า "ที" "เอฟ" "ดี" ให้ชัด เว้นจังหวะสั้น ๆ ก่อนตัวเลข)`, "warning");
+                        triggerToast(`ไม่เข้าใจคำสั่งเสียง กรุณาลองพูดรหัสก่อน เช่น "T05" แล้วพูดเวลา เช่น "10 00" — พูดช้าลงและเว้นจังหวะจะช่วยลดความเพี้ยน`, "warning");
                     } else {
                         triggerToast("หยุดฟังแล้ว ✅ บันทึกข้อมูลที่พูดเรียบร้อย", "success");
                     }
@@ -2757,18 +3780,69 @@
 
         function normalizePphVoiceText(rawTranscript) {
             let norm = (rawTranscript || "").toLowerCase();
-            norm = norm.replace(/ที่|ที/g, ' t ');
-            norm = norm.replace(/ดี้|ดี/g, ' d ');
-            norm = norm.replace(/เอฟ/g, ' f ');
-            norm = norm.replace(/เข้า|ขาเข้า/g, ' inbound ');
+            norm = norm.replace(/[:.,\-]/g, ' ');
+            norm = norm.replace(/\bzero\b|\boh\b/g, ' 0 ');
+            norm = norm.replace(/\bone\b/g, ' 1 ').replace(/\btwo\b/g, ' 2 ').replace(/\bthree\b/g, ' 3 ');
+            norm = norm.replace(/\bfour\b/g, ' 4 ').replace(/\bfive\b/g, ' 5 ').replace(/\bsix\b/g, ' 6 ');
+            norm = norm.replace(/\bseven\b/g, ' 7 ').replace(/\beight\b/g, ' 8 ').replace(/\bnine\b/g, ' 9 ');
+            norm = norm.replace(/\bten\b/g, ' 10 ').replace(/\beleven\b/g, ' 11 ').replace(/\btwelve\b/g, ' 12 ');
+            norm = norm.replace(/\btwenty\b/g, ' 20 ').replace(/\bthirty\b/g, ' 30 ');
+            norm = norm.replace(/\bforty\b/g, ' 40 ').replace(/\bfifty\b/g, ' 50 ');
+            // Broader mishearing coverage for the trigger words. In addition to the
+            // known common mishearings matched by regex here, isFuzzyCloseToAny()
+            // is used downstream (in pphTranscriptLooksValid / applyPphVoiceCommand)
+            // to catch further variants via edit-distance rather than an
+            // ever-growing literal list.
+            norm = norm.replace(/\bcode'?s?\b|\bcoat\b|\bcold\b|\bcall\b|\bkode\b|\bcourier\b|\btango\b|\bkot\b|\bkoh\b|\bcoke\b|\bcoach\b|\bkorea\b|\bที่\b|\bที\b/g, ' t ');
+            norm = norm.replace(/\bstart\b|\bstarted\b|\bstark\b|\bsmart\b|\bfirst\s*scan\b|\bfoxtrot\b|\bfast\b|\bfirst\b|\bstat\b|\bscan\b|\bfah\b|\bเอฟ\b/g, ' f ');
+            norm = norm.replace(/\bend\b|\bends\b|\bended\b|\bdepart\w*\b|\bthe\s*part\b|\bdeep\s*art\b|\bdelta\b|\bdead\b|\bdid\b|\bday\b|\bde\b|\bดี้\b|\bดี\b/g, ' d ');
+            norm = norm.replace(/\binbound\b|\bin\s*bound\b|\bin\s*bown\b|\bin\s*bon\b|\bin\s*ban\b|\bเข้า\b|\bขาเข้า\b/g, ' inbound ');
             return norm;
+        }
+
+        function bareTimeMatchInText(norm) {
+            const m = norm.match(/(?:^|[^a-z0-9])(\d{1,2})\D{1,3}(\d{2})(?:[^a-z0-9]|$)/);
+            return m ? { h: m[1], m: m[2] } : null;
+        }
+
+        function todaysCourierById(courierId) {
+            if (!courierId) return null;
+            return attendanceRecords.find(r => r.checkin_date === todayStr() && r.courier_id === courierId) || null;
+        }
+
+        function setActivePphVoiceTarget(courierId, field) {
+            pphVoiceActiveCourierId = courierId;
+            pphVoiceActiveField = field;
+            renderPphRouteCourierList();
+            const caption = document.getElementById('pphVoiceCaption');
+            if (caption && courierId && field) {
+                caption.textContent = `🎯 ${courierId} → รอฟัง ${field.toUpperCase()}...`;
+            }
+        }
+
+        function pphTranscriptLooksValid(rawTranscript) {
+            const norm = normalizePphVoiceText(rawTranscript);
+            const inboundMatch = norm.match(/(?:inbound)\D{0,4}(\d{1,2})\D{0,3}(\d{2})/);
+            const codeMatch = norm.match(/(?:^|[^a-z0-9])t\D{0,3}(\d{1,3})/);
+            const fsMatch = norm.match(/(?:^|[^a-z0-9])f\D{0,3}(\d{1,2})\D{0,3}(\d{2})/);
+            const depMatch = norm.match(/(?:^|[^a-z0-9])d\D{0,3}(\d{1,2})\D{0,3}(\d{2})/);
+            if (inboundMatch || codeMatch || fsMatch || depMatch) return true;
+            // Fuzzy fallback: check whether any single word in the raw transcript
+            // is close (edit-distance) to a known trigger word, so unusual
+            // mishearings not covered by the regex list above still count as
+            // "looks like a command" and get preferred over pure noise.
+            const words = (rawTranscript || '').toLowerCase().split(/\s+/);
+            const triggerWords = ['code','start','end','depart','departure','inbound','first','scan','finish','begin','out'];
+            if (words.some(w => isFuzzyCloseToAny(w, triggerWords, 3))) return true;
+            if (pphVoiceActiveCourierId && pphVoiceActiveField && bareTimeMatchInText(norm)) return true;
+            return false;
         }
 
         function applyPphVoiceCommand(rawTranscript, silentNoMatch) {
             const norm = normalizePphVoiceText(rawTranscript);
 
             const inboundMatch = norm.match(/(?:inbound)\D{0,4}(\d{1,2})\D{0,3}(\d{2})/);
-            const courierMatch = norm.match(/(?:^|[^a-z0-9])t\D{0,2}(\d{1,3})/);
+            const codeMatch = norm.match(/(?:^|[^a-z0-9])t\D{0,3}(\d{1,3})/);
             const fsMatch = norm.match(/(?:^|[^a-z0-9])f\D{0,3}(\d{1,2})\D{0,3}(\d{2})/);
             const depMatch = norm.match(/(?:^|[^a-z0-9])d\D{0,3}(\d{1,2})\D{0,3}(\d{2})/);
 
@@ -2785,47 +3859,79 @@
                 appliedSomething = true;
             }
 
-            if (courierMatch && (fsMatch || depMatch)) {
-                const suffixNum = parseInt(courierMatch[1]);
+            let resolvedCourier = null;
+            if (codeMatch) {
+                const suffixNum = parseInt(codeMatch[1]);
                 const todaysCouriers = attendanceRecords.filter(r => r.checkin_date === todayStr());
-                const matched = todaysCouriers.find(c => {
+                resolvedCourier = todaysCouriers.find(c => {
                     const digitsInId = (c.courier_id.match(/(\d{1,3})$/) || [])[1];
                     return digitsInId != null && parseInt(digitsInId) === suffixNum;
                 });
-                if (!matched) {
-                    if (!silentNoMatch) {
-                        triggerToast(`ไม่พบคนขับที่รหัสลงท้าย ${courierMatch[1]} ในรายชื่อเช็คอินวันนี้`, "danger");
+                if (!resolvedCourier && !silentNoMatch) {
+                    triggerToast(`ไม่พบคนขับที่รหัสลงท้าย ${codeMatch[1]} ในรายชื่อเช็คอินวันนี้`, "danger");
+                }
+            }
+
+            if (resolvedCourier && (fsMatch || depMatch)) {
+                if (!pphData.route_log[resolvedCourier.courier_id]) pphData.route_log[resolvedCourier.courier_id] = { fs: null, dep: null };
+                const rec = pphData.route_log[resolvedCourier.courier_id];
+                if (fsMatch) {
+                    const t = `${fsMatch[1].padStart(2,'0')}:${fsMatch[2]}`;
+                    if (rec.fs !== t) { rec.fs = t; feedbackParts.push(`${resolvedCourier.courier_id} FS ${t}`); }
+                }
+                if (depMatch) {
+                    const t = `${depMatch[1].padStart(2,'0')}:${depMatch[2]}`;
+                    if (rec.dep !== t) { rec.dep = t; feedbackParts.push(`${resolvedCourier.courier_id} DEP ${t}`); }
+                }
+                appliedSomething = true;
+                setActivePphVoiceTarget(resolvedCourier.courier_id, rec.dep ? null : 'dep');
+            }
+            else if (resolvedCourier && !fsMatch && !depMatch) {
+                setActivePphVoiceTarget(resolvedCourier.courier_id, 'fs');
+                feedbackParts.push(`เลือก ${resolvedCourier.courier_id} → พูดเวลา FS ได้เลย`);
+                appliedSomething = true;
+            }
+            else if (!codeMatch && !fsMatch && !depMatch && !inboundMatch && pphVoiceActiveCourierId && pphVoiceActiveField) {
+                const bare = bareTimeMatchInText(norm);
+                if (bare) {
+                    const courier = todaysCourierById(pphVoiceActiveCourierId);
+                    if (courier) {
+                        const t = `${bare.h.padStart(2,'0')}:${bare.m}`;
+                        if (!pphData.route_log[courier.courier_id]) pphData.route_log[courier.courier_id] = { fs: null, dep: null };
+                        const rec = pphData.route_log[courier.courier_id];
+                        const fieldJustSet = pphVoiceActiveField;
+                        rec[fieldJustSet] = t;
+                        feedbackParts.push(`${courier.courier_id} ${fieldJustSet.toUpperCase()} ${t}`);
+                        appliedSomething = true;
+                        if (fieldJustSet === 'fs') {
+                            setActivePphVoiceTarget(courier.courier_id, 'dep');
+                            feedbackParts.push('ถัดไป: พูดเวลา DEP');
+                        } else {
+                            setActivePphVoiceTarget(null, null);
+                            feedbackParts.push('บันทึกครบแล้ว ✅ พูดรหัสคันถัดไปได้เลย');
+                        }
                     }
-                } else {
-                    if (!pphData.route_log[matched.courier_id]) pphData.route_log[matched.courier_id] = { fs: null, dep: null };
-                    const rec = pphData.route_log[matched.courier_id];
-                    if (fsMatch) {
-                        const t = `${fsMatch[1].padStart(2,'0')}:${fsMatch[2]}`;
-                        if (rec.fs !== t) { rec.fs = t; feedbackParts.push(`${matched.courier_id} FS ${t}`); }
-                    }
-                    if (depMatch) {
-                        const t = `${depMatch[1].padStart(2,'0')}:${depMatch[2]}`;
-                        if (rec.dep !== t) { rec.dep = t; feedbackParts.push(`${matched.courier_id} DEP ${t}`); }
-                    }
-                    appliedSomething = true;
-                    renderPphRouteCourierList();
                 }
             }
 
             if (appliedSomething) {
                 computeAndRenderPph();
                 savePphDataDebounced();
+                renderPphRouteCourierList();
+                if (currentMainTab === 'firstdel') renderFirstDelList();
                 if (feedbackParts.length > 0) {
-                    triggerToast(`✅ บันทึกแล้ว: ${feedbackParts.join(' • ')}`, "success");
+                    triggerToast(`✅ ${feedbackParts.join(' • ')}`, "success");
                 }
                 return true;
             } else if (!silentNoMatch) {
-                triggerToast(`ไม่เข้าใจคำสั่งเสียง: "${rawTranscript}" ลองพูดเช่น "T05 F 09 30 D 10 40"`, "warning");
+                triggerToast(`ไม่เข้าใจคำสั่งเสียง: "${rawTranscript}" ลองพูดรหัสเช่น "T05" แล้วพูดเวลา เช่น "10 00"`, "warning");
             }
             return false;
         }
 
         function computeAndRenderPph() {
+            const staffEl = document.getElementById('pphStaffCount');
+            if (!staffEl) return; // PPH template not mounted yet
             const staff = pphData.staff_count || 0;
             const sorter = pphData.sorter_count || 0;
             const courierCount = pphData._courierCountOverride != null ? pphData._courierCountOverride : (attendanceRecords.filter(r => r.checkin_date === todayStr()).length);
@@ -2888,6 +3994,8 @@
         async function clearTodayPphData() {
             if (!confirm("ยืนยันล้างข้อมูล PPH ของวันนี้ทั้งหมด (คีย์ผิด/เริ่มใหม่)?")) return;
             pphData = { pph_date: todayStr(), staff_count: 0, sorter_count: 0, new_parcels: 0, old_parcels: 0, inbound_time: null, fs_log: [], route_log: {} };
+            pphVoiceActiveCourierId = null;
+            pphVoiceActiveField = null;
             document.getElementById('pphStaffCount').value = 0;
             document.getElementById('pphSorterCount').value = 0;
             document.getElementById('pphNewParcels').value = 0;
@@ -2944,6 +4052,7 @@
 
         async function renderDashboardTab() {
             const dateField = document.getElementById('dashboardDate');
+            if (!dateField) return; // dashboard template not mounted yet
             const dateStr = dateField.value || todayStr();
             const s = dateStr.split('-');
             document.getElementById('dashboardDateTitle').textContent = `Dashboard — ${s[2]} ${thaiMonthShort(parseInt(s[1])-1)}. ${parseInt(s[0])+543}`;
@@ -2966,6 +4075,7 @@
             }
             renderRiskAlertList(dateStr);
             await renderDashboardPphSummary(dateStr);
+            renderDashboardFirstDelSummary(dateStr);
             renderDashboardPhotoGallery(dateStr);
         }
 
@@ -3115,6 +4225,19 @@
             }
         }
 
+        function renderDashboardFirstDelSummary(dateStr) {
+            const el = document.getElementById('dashFirstDelMetaLine');
+            if (!el) return;
+            if (dateStr !== todayStr()) {
+                el.innerHTML = 'ข้อมูล First Del แสดงเฉพาะวันนี้ในรุ่นนี้ (เชื่อมตาราง first_del_log เพื่อดูย้อนหลัง)';
+                return;
+            }
+            const entries = Object.entries(firstDelLogToday).filter(([, v]) => v.first_del_time);
+            const lateCount = entries.filter(([, v]) => timeStrToMinutes(v.first_del_time) > FIRST_DEL_TARGET_MIN).length;
+            const avgStem = entries.length ? Math.round(entries.reduce((a,[,v]) => a + (v.stem_out_minutes||0), 0) / entries.length) : null;
+            el.innerHTML = `บันทึกแล้ว <b>${entries.length}</b> คน • เกินเป้า 09:00 <b style="color:var(--danger);">${lateCount}</b> คน${avgStem != null ? ' • Stem Out เฉลี่ย <b>' + avgStem + '</b> นาที' : ''}`;
+        }
+
         function renderDashboardPhotoGallery(dateStr) {
             const grid = document.getElementById('dashPhotoGallery');
             const countsEl = document.getElementById('dashPhotoCounts');
@@ -3125,7 +4248,7 @@
                 .sort((a, b) => (a.checkin_time || '').localeCompare(b.checkin_time || ''));
 
             const noUniformCount = dayRecords.filter(r => !r.uniform_ok).length;
-            countsEl.innerHTML = `<b>${dayRecords.length}</b> คน • ไม่มียูนิฟอร์ม <b>${noUniformCount}</b>`;
+            countsEl.innerHTML = `<b>${dayRecords.length}</b> คน • แต่งกายไม่ถูกต้อง <b>${noUniformCount}</b>`;
 
             if (dayRecords.length === 0) {
                 grid.innerHTML = `<div class="empty-state-note" style="grid-column:1/-1;">ยังไม่มีใครเช็คอินในวันที่เลือก</div>`;
@@ -3141,7 +4264,7 @@
                     ? `<img src="${r.photo_data}" alt="${r.emp_name || ''}">`
                     : `<div class="no-photo-label"><i class="fa-solid fa-image" style="font-size:16px; opacity:0.5;"></i><br>no photo</div>`;
                 const uniformFlagHtml = !r.uniform_ok
-                    ? `<div class="photo-uniform-flag" title="ไม่มียูนิฟอร์ม"><i class="fa-solid fa-shirt"></i></div>`
+                    ? `<div class="photo-uniform-flag" title="แต่งกายไม่ถูกต้อง"><i class="fa-solid fa-shirt"></i></div>`
                     : '';
                 card.innerHTML = `
                     <div class="photo-thumb-wrap">${thumbHtml}</div>
