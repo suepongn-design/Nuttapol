@@ -5012,10 +5012,35 @@ Respond with ONLY a raw JSON array (no markdown fences, no explanation, no extra
         async function exportEdtImage() {
             if (!window.html2canvas) { triggerToast(t("toast_export_tool_load_fail"), "danger"); return; }
             const target = document.getElementById('edtResultCard');
-            if (!target) return;
+            const wrapper = target ? target.querySelector('.edt-table-wrapper') : null;
+            const table = document.getElementById('edtResultTable');
+            if (!target || !wrapper || !table) return;
             triggerToast(t("toast_generating_report_image"), "success");
+
+            // The table wrapper scrolls horizontally on narrow screens, so
+            // html2canvas would otherwise only capture whatever slice was
+            // scrolled into view. Temporarily expand the card + wrapper to the
+            // table's full natural width so every column is always included,
+            // then restore the normal responsive layout afterward.
+            const fullWidth = table.scrollWidth;
+            const prevCardWidth = target.style.width;
+            const prevCardMaxWidth = target.style.maxWidth;
+            const prevWrapOverflow = wrapper.style.overflowX;
+            const prevWrapWidth = wrapper.style.width;
+            const prevBodyOverflowX = document.body.style.overflowX;
+            wrapper.scrollLeft = 0;
+            target.style.width = fullWidth + 'px';
+            target.style.maxWidth = 'none';
+            wrapper.style.overflowX = 'visible';
+            wrapper.style.width = fullWidth + 'px';
+            document.body.style.overflowX = 'visible';
+
             try {
-                const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2 });
+                const canvas = await html2canvas(target, {
+                    backgroundColor: '#ffffff',
+                    scale: 2,
+                    windowWidth: Math.max(document.documentElement.scrollWidth, fullWidth + 100)
+                });
                 const link = document.createElement('a');
                 link.download = `edt_summary_${todayStr()}.png`;
                 link.href = canvas.toDataURL('image/png');
@@ -5023,6 +5048,12 @@ Respond with ONLY a raw JSON array (no markdown fences, no explanation, no extra
             } catch (err) {
                 console.error(err);
                 triggerToast(t("toast_export_image_fail"), "danger");
+            } finally {
+                target.style.width = prevCardWidth;
+                target.style.maxWidth = prevCardMaxWidth;
+                wrapper.style.overflowX = prevWrapOverflow;
+                wrapper.style.width = prevWrapWidth;
+                document.body.style.overflowX = prevBodyOverflowX;
             }
         }
 
