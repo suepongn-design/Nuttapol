@@ -357,6 +357,30 @@
         .admin-card.show { display: block; }
 
         .record-list { display: flex; flex-direction: column; gap: 10px; }
+
+        /* ===== EDT SUMMARY FEATURE ===== */
+        .edt-thumb-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .edt-thumb { position: relative; width: 72px; height: 72px; border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0; background: #f1f5f9; }
+        .edt-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .edt-thumb .edt-thumb-remove { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; border: none; }
+        .edt-thumb .edt-thumb-num { position: absolute; bottom: 2px; left: 3px; font-size: 9px; font-weight: 700; color: #fff; background: rgba(0,0,0,0.5); padding: 1px 5px; border-radius: 8px; }
+
+        .edt-result-card { background: var(--white); border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.06); border: 1px solid var(--border-gray); }
+        .edt-result-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--dhl-yellow); }
+        .edt-result-title-group { display: flex; flex-direction: column; }
+        .edt-result-title { font-size: 15px; font-weight: 800; color: var(--dhl-dark); }
+        .edt-result-subtitle { font-size: 11px; color: #57534e; font-weight: 600; }
+        .edt-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .edt-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 480px; }
+        .edt-table th { background: #dbeafe; color: #1e3a5f; padding: 8px 10px; text-align: right; font-weight: 700; white-space: nowrap; border-bottom: 2px solid #bfdbfe; }
+        .edt-table th:first-child { text-align: left; }
+        .edt-table td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--border-gray); white-space: nowrap; }
+        .edt-table td:first-child { text-align: left; font-weight: 600; }
+        .edt-table tr.edt-total-row td { background: #dbeafe; font-weight: 800; border-top: 2px solid #bfdbfe; border-bottom: none; }
+        .edt-table td.edt-pct-cell { font-weight: 800; }
+        .edt-table td.edt-pct-ok { background: #d9ead3; color: #1e5c1e; }
+        .edt-table td.edt-pct-warn { background: #fce5cd; color: #99530a; }
+        .edt-loading-note { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--dhl-grey); margin-top: 10px; }
         .leave-card, .attendance-card {
             background: var(--light-gray); border-radius: 10px; padding: 12px 14px;
             border-left: 4px solid #cbd5e1;
@@ -936,6 +960,7 @@
                     <button class="admin-tab-btn active" id="tabBtnLeave" onclick="switchAdminSubTab('leave')" data-i18n="admin_subtab_leave">คำขอลา</button>
                     <button class="admin-tab-btn" id="tabBtnAttendance" onclick="switchAdminSubTab('attendance')" data-i18n="admin_subtab_attendance">เข้างาน</button>
                     <button class="admin-tab-btn" id="tabBtnCouriers" onclick="switchAdminSubTab('couriers')" data-i18n="admin_subtab_couriers">คนขับรถ</button>
+                    <button class="admin-tab-btn" id="tabBtnEdt" onclick="switchAdminSubTab('edt')" data-i18n="admin_subtab_edt">สรุป EDT</button>
                 </div>
 
                 <div class="admin-card show" id="adminCardLeave">
@@ -1017,6 +1042,56 @@
                         <button class="btn-dark-sm" onclick="refreshCourierData()"><i class="fa-solid fa-rotate-right"></i> <span data-i18n="btn_refresh">รีเฟรช</span></button>
                     </div>
                     <div class="record-list" id="courierMgmtList"></div>
+                </div>
+
+                <div class="admin-card" id="adminCardEdt">
+                    <div class="section-title-form">
+                        <i class="fa-solid fa-chart-column" style="color: var(--dhl-red);"></i>
+                        <span data-i18n="edt_card_title">สรุป EDT (ถ่ายรูป/อัปโหลดแล้วสรุปอัตโนมัติ)</span>
+                    </div>
+                    <div class="rules-card" style="border-top-color:#0891b2; margin-bottom:12px;">
+                        <div style="font-size:11px; color:#4a5568; line-height:1.7;" data-i18n="edt_intro_note">
+                            อัปโหลดหรือถ่ายรูปตารางรายงาน EDT_Status_Check จากระบบ (ถ่ายได้หลายรูปถ้าตารางยาว/กว้างเกินจอเดียว) ระบบจะใช้ AI อ่านตัวเลขและสรุปให้อัตโนมัติตามกฎ: ตัดคนขับที่ไม่ใช่ BPEQ/BPEB/BPET/BPED ออก รวมยอด Pending Close เข้ากับช่วงเวลาเดียวกัน แล้วคำนวณ Total และ EDT% ให้ทันที
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label data-i18n="edt_upload_label">รูปภาพตารางรายงาน (เลือกได้หลายรูป)</label>
+                        <input type="file" id="edtImageInput" accept="image/*" multiple style="display:none;" onchange="handleEdtImageSelect(event)">
+                        <button type="button" class="ghost-btn" onclick="document.getElementById('edtImageInput').click()">
+                            <i class="fa-solid fa-camera"></i> <span data-i18n="edt_choose_photos_btn">เลือก/ถ่ายรูปตาราง</span>
+                        </button>
+                        <div class="edt-thumb-row" id="edtThumbRow"></div>
+                    </div>
+
+                    <div class="input-group">
+                        <label data-i18n="edt_api_key_label">Google Gemini API Key (ฟรี — เก็บไว้ในเครื่องนี้เท่านั้น)</label>
+                        <input type="password" id="edtApiKeyInput" class="form-input" placeholder="AIzaSy..." data-i18n-placeholder="edt_api_key_placeholder">
+                        <div class="checklist-note" style="margin-top:4px;" data-i18n="edt_api_key_note">ใช้ Google Gemini API ฟรี ไม่มีค่าใช้จ่าย ไม่ต้องผูกบัตรเครดิต — ขอ API Key ฟรีได้ที่ <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> ระบบจะจำค่าไว้ในเบราว์เซอร์นี้เท่านั้น ไม่ส่งไปที่อื่นนอกจาก Google โดยตรง</div>
+                    </div>
+
+                    <button type="button" class="submit-btn" id="edtAnalyzeBtn" style="background:#0891b2;" onclick="analyzeEdtImages()" disabled>
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="edt_analyze_btn">วิเคราะห์และสรุปข้อมูล</span>
+                    </button>
+
+                    <div id="edtResultWrap" style="display:none; margin-top:14px;">
+                        <div id="edtResultCard" class="edt-result-card">
+                            <div class="edt-result-header">
+                                <div class="dhl-brand-block" style="font-size:22px;">DHL</div>
+                                <div class="edt-result-title-group">
+                                    <div class="edt-result-title" data-i18n="edt_result_title">EDT Status Summary</div>
+                                    <div class="edt-result-subtitle" id="edtResultDateLabel">-</div>
+                                </div>
+                            </div>
+                            <div class="edt-table-wrapper">
+                                <table class="edt-table" id="edtResultTable"></table>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:8px; margin-top:10px;">
+                            <button type="button" class="ghost-btn" onclick="exportEdtImage()"><i class="fa-solid fa-image"></i> <span data-i18n="edt_export_image_btn">บันทึกเป็นรูปภาพ</span></button>
+                            <button type="button" class="btn-export" style="flex:1; min-height:46px; border-radius:6px;" onclick="exportEdtCsv()"><i class="fa-solid fa-file-arrow-down"></i> <span data-i18n="edt_export_csv_btn">ดึงเป็น CSV</span></button>
+                        </div>
+                    </div>
                 </div>
                 </div>
                 <!-- /adminUnlockedBox -->
@@ -1601,6 +1676,27 @@
                 clock_style_digital: 'ดิจิตอล',
                 clock_style_analog: 'เข็ม',
                 toast_clock_style_changed: 'เปลี่ยนรูปแบบนาฬิกาแล้ว',
+                admin_subtab_edt: 'สรุป EDT',
+                edt_card_title: 'สรุป EDT (ถ่ายรูป/อัปโหลดแล้วสรุปอัตโนมัติ)',
+                edt_intro_note: 'อัปโหลดหรือถ่ายรูปตารางรายงาน EDT_Status_Check จากระบบ (ถ่ายได้หลายรูปถ้าตารางยาว/กว้างเกินจอเดียว) ระบบจะใช้ AI อ่านตัวเลขและสรุปให้อัตโนมัติตามกฎ: ตัดคนขับที่ไม่ใช่ BPEQ/BPEB/BPET/BPED ออก รวมยอด Pending Close เข้ากับช่วงเวลาเดียวกัน แล้วคำนวณ Total และ EDT% ให้ทันที',
+                edt_upload_label: 'รูปภาพตารางรายงาน (เลือกได้หลายรูป)',
+                edt_choose_photos_btn: 'เลือก/ถ่ายรูปตาราง',
+                edt_api_key_label: 'Google Gemini API Key (ฟรี — เก็บไว้ในเครื่องนี้เท่านั้น)',
+                edt_api_key_placeholder: 'AIzaSy...',
+                edt_api_key_note: 'ใช้ Google Gemini API ฟรี ไม่มีค่าใช้จ่าย ไม่ต้องผูกบัตรเครดิต — ขอ API Key ฟรีได้ที่ <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> ระบบจะจำค่าไว้ในเบราว์เซอร์นี้เท่านั้น ไม่ส่งไปที่อื่นนอกจาก Google โดยตรง',
+                edt_analyze_btn: 'วิเคราะห์และสรุปข้อมูล',
+                edt_analyzing_label: 'กำลังวิเคราะห์...',
+                edt_result_title: 'EDT Status Summary',
+                edt_export_image_btn: 'บันทึกเป็นรูปภาพ',
+                edt_export_csv_btn: 'ดึงเป็น CSV',
+                edt_col_courier: 'USERNAME(COURIER)',
+                edt_col_nonuse: 'Non use',
+                edt_col_total: 'Total',
+                edt_row_total: 'Total',
+                edt_toast_select_image_first: 'กรุณาเลือกหรือถ่ายรูปตารางก่อน',
+                edt_toast_enter_api_key: 'กรุณากรอก Google Gemini API Key ก่อนวิเคราะห์ (ขอฟรีได้ที่ aistudio.google.com/app/apikey)',
+                edt_toast_analyze_success: 'สรุปข้อมูล EDT สำเร็จแล้ว',
+                edt_toast_analyze_fail: 'วิเคราะห์ข้อมูลไม่สำเร็จ กรุณาตรวจสอบ API Key และรูปภาพ',
                 settings_title: "การตั้งค่า", settings_lang_label: "ภาษา / Language", settings_theme_label: "ธีมสี (DHL)", settings_close_btn: "ปิด"
             },
             en: {
@@ -1868,6 +1964,27 @@
                 clock_style_digital: 'Digital',
                 clock_style_analog: 'Analog',
                 toast_clock_style_changed: 'Clock style updated',
+                admin_subtab_edt: 'EDT Summary',
+                edt_card_title: 'EDT Summary (upload/photograph a report and summarize automatically)',
+                edt_intro_note: 'Upload or photograph the EDT_Status_Check report table from the system (you can add multiple photos if the table is too long/wide for one screenshot). The AI will read the numbers and summarize automatically following these rules: drop couriers that aren\'t BPEQ/BPEB/BPET/BPED, merge Pending Close values into their matching time slot, then calculate Total and EDT% instantly.',
+                edt_upload_label: 'Report table photos (multiple allowed)',
+                edt_choose_photos_btn: 'Choose/take photos of the table',
+                edt_api_key_label: 'Google Gemini API Key (free — stored on this device only)',
+                edt_api_key_placeholder: 'AIzaSy...',
+                edt_api_key_note: 'Uses the free Google Gemini API — no cost, no credit card required. Get a free API Key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a>. It\'s remembered only in this browser and sent nowhere except directly to Google.',
+                edt_analyze_btn: 'Analyze & Summarize',
+                edt_analyzing_label: 'Analyzing...',
+                edt_result_title: 'EDT Status Summary',
+                edt_export_image_btn: 'Save as image',
+                edt_export_csv_btn: 'Export CSV',
+                edt_col_courier: 'USERNAME(COURIER)',
+                edt_col_nonuse: 'Non use',
+                edt_col_total: 'Total',
+                edt_row_total: 'Total',
+                edt_toast_select_image_first: 'Please choose or take a photo of the table first',
+                edt_toast_enter_api_key: 'Please enter your Google Gemini API Key before analyzing (get one free at aistudio.google.com/app/apikey)',
+                edt_toast_analyze_success: 'EDT summary generated successfully',
+                edt_toast_analyze_fail: 'Analysis failed. Please check your API Key and photos',
                 settings_title: "Settings", settings_lang_label: "Language", settings_theme_label: "Theme (DHL)", settings_close_btn: "Close"
             },
             cn: {
@@ -2135,6 +2252,27 @@
                 clock_style_digital: '数字',
                 clock_style_analog: '指针',
                 toast_clock_style_changed: '时钟样式已更新',
+                admin_subtab_edt: 'EDT汇总',
+                edt_card_title: 'EDT汇总（拍照/上传后自动汇总）',
+                edt_intro_note: '上传或拍摄系统中的 EDT_Status_Check 报表截图（如果表格过长/过宽可分多张照片）。AI 将读取数字并按以下规则自动汇总：剔除非 BPEQ/BPEB/BPET/BPED 的司机，将 Pending Close 数值合并到对应时间段，然后立即计算 Total 和 EDT%。',
+                edt_upload_label: '报表图片（可多选）',
+                edt_choose_photos_btn: '选择/拍摄表格照片',
+                edt_api_key_label: 'Google Gemini API 密钥（免费 —— 仅保存在本设备）',
+                edt_api_key_placeholder: 'AIzaSy...',
+                edt_api_key_note: '使用免费的 Google Gemini API，无需付费，无需绑定信用卡 —— 可在 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> 免费申请密钥。密钥仅保存在此浏览器中，仅直接发送给 Google，不会发往其他地方。',
+                edt_analyze_btn: '分析并汇总数据',
+                edt_analyzing_label: '正在分析...',
+                edt_result_title: 'EDT Status Summary',
+                edt_export_image_btn: '保存为图片',
+                edt_export_csv_btn: '导出CSV',
+                edt_col_courier: 'USERNAME(COURIER)',
+                edt_col_nonuse: 'Non use',
+                edt_col_total: 'Total',
+                edt_row_total: '合计',
+                edt_toast_select_image_first: '请先选择或拍摄表格图片',
+                edt_toast_enter_api_key: '分析前请先输入 Google Gemini API 密钥（可在 aistudio.google.com/app/apikey 免费申请）',
+                edt_toast_analyze_success: 'EDT汇总生成成功',
+                edt_toast_analyze_fail: '分析失败，请检查 API 密钥和图片',
                 settings_title: "设置", settings_lang_label: "语言", settings_theme_label: "主题色 (DHL)", settings_close_btn: "关闭"
             },
             jp: {
@@ -2402,6 +2540,27 @@
                 clock_style_digital: 'デジタル',
                 clock_style_analog: 'アナログ',
                 toast_clock_style_changed: '時計スタイルを更新しました',
+                admin_subtab_edt: 'EDTサマリー',
+                edt_card_title: 'EDTサマリー（写真をアップロードすると自動集計）',
+                edt_intro_note: 'システムのEDT_Status_Checkレポート表をアップロードまたは撮影してください（表が長い/広い場合は複数枚に分けて撮影可能）。AIが数値を読み取り、以下のルールに従って自動集計します：BPEQ/BPEB/BPET/BPED以外のドライバーを除外し、Pending Closeの数値を対応する時間帯に合算した上で、TotalとEDT%を即座に計算します。',
+                edt_upload_label: 'レポート表の写真（複数選択可）',
+                edt_choose_photos_btn: '表の写真を選択／撮影',
+                edt_api_key_label: 'Google Gemini APIキー（無料 — この端末にのみ保存）',
+                edt_api_key_placeholder: 'AIzaSy...',
+                edt_api_key_note: '無料のGoogle Gemini APIを使用します。費用もクレジットカード登録も不要です — <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> で無料のAPIキーを取得できます。このブラウザにのみ記憶され、Google以外には送信されません。',
+                edt_analyze_btn: '分析して集計',
+                edt_analyzing_label: '分析中...',
+                edt_result_title: 'EDT Status Summary',
+                edt_export_image_btn: '画像として保存',
+                edt_export_csv_btn: 'CSVを出力',
+                edt_col_courier: 'USERNAME(COURIER)',
+                edt_col_nonuse: 'Non use',
+                edt_col_total: 'Total',
+                edt_row_total: '合計',
+                edt_toast_select_image_first: '先に表の写真を選択または撮影してください',
+                edt_toast_enter_api_key: '分析する前にGoogle Gemini APIキーを入力してください（aistudio.google.com/app/apikeyで無料取得できます）',
+                edt_toast_analyze_success: 'EDTサマリーの生成に成功しました',
+                edt_toast_analyze_fail: '分析に失敗しました。APIキーと写真をご確認ください',
                 settings_title: "設定", settings_lang_label: "言語", settings_theme_label: "テーマカラー (DHL)", settings_close_btn: "閉じる"
             }
         };
@@ -2960,6 +3119,7 @@
             applyI18n();
             loadSavedTheme();
             loadSavedClockStyle();
+            loadSavedEdtApiKey();
             updateAdminTabVisibility();
             setupBookSwipe();
             await switchMainTab('checkin');
@@ -3356,9 +3516,11 @@
             document.getElementById('tabBtnLeave').classList.toggle('active', tab === 'leave');
             document.getElementById('tabBtnAttendance').classList.toggle('active', tab === 'attendance');
             document.getElementById('tabBtnCouriers').classList.toggle('active', tab === 'couriers');
+            document.getElementById('tabBtnEdt').classList.toggle('active', tab === 'edt');
             document.getElementById('adminCardLeave').classList.toggle('show', tab === 'leave');
             document.getElementById('adminCardAttendance').classList.toggle('show', tab === 'attendance');
             document.getElementById('adminCardCouriers').classList.toggle('show', tab === 'couriers');
+            document.getElementById('adminCardEdt').classList.toggle('show', tab === 'edt');
         }
 
         // ===================== PPH / DASHBOARD CONTENT MOUNTING =====================
@@ -4611,6 +4773,255 @@
                 `;
                 box.appendChild(card);
             });
+        }
+
+        // ===================== EDT SUMMARY FEATURE =====================
+        // Uses Claude's vision API to read a screenshot of the EDT_Status_Check
+        // report and extract raw per-courier numbers, then applies the exact
+        // business rules in JS (filter couriers, merge pending-close values
+        // into their matching time slot, compute Total and EDT%).
+        const EDT_ALLOWED_PREFIXES = ['BPEQ', 'BPEB', 'BPET', 'BPED'];
+        let edtSelectedImages = []; // { dataUrl, mediaType, base64 }
+        let edtLastResultRows = null;
+        let edtLastResultTotals = null;
+
+        function loadSavedEdtApiKey() {
+            try {
+                const saved = localStorage.getItem('dhl_edt_api_key');
+                if (saved) {
+                    const field = document.getElementById('edtApiKeyInput');
+                    if (field) field.value = saved;
+                }
+            } catch (e) {}
+        }
+
+        function handleEdtImageSelect(event) {
+            const files = Array.from(event.target.files || []);
+            if (files.length === 0) return;
+            let pending = files.length;
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const dataUrl = reader.result;
+                    const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/.exec(dataUrl);
+                    if (match) {
+                        edtSelectedImages.push({ dataUrl, mediaType: match[1], base64: match[2] });
+                    }
+                    pending--;
+                    if (pending === 0) {
+                        renderEdtThumbnails();
+                        updateEdtAnalyzeButtonState();
+                        event.target.value = '';
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function removeEdtImage(idx) {
+            edtSelectedImages.splice(idx, 1);
+            renderEdtThumbnails();
+            updateEdtAnalyzeButtonState();
+        }
+
+        function renderEdtThumbnails() {
+            const row = document.getElementById('edtThumbRow');
+            if (!row) return;
+            row.innerHTML = '';
+            edtSelectedImages.forEach((img, idx) => {
+                const div = document.createElement('div');
+                div.className = 'edt-thumb';
+                div.innerHTML = `
+                    <img src="${img.dataUrl}" alt="EDT report ${idx+1}">
+                    <span class="edt-thumb-num">#${idx+1}</span>
+                    <button type="button" class="edt-thumb-remove" onclick="removeEdtImage(${idx})"><i class="fa-solid fa-xmark"></i></button>
+                `;
+                row.appendChild(div);
+            });
+        }
+
+        function updateEdtAnalyzeButtonState() {
+            const btn = document.getElementById('edtAnalyzeBtn');
+            if (btn) btn.disabled = edtSelectedImages.length === 0;
+        }
+
+        function courierMatchesEdtPrefix(username) {
+            const u = (username || '').toUpperCase();
+            return EDT_ALLOWED_PREFIXES.some(p => u.startsWith(p));
+        }
+
+        async function analyzeEdtImages() {
+            if (edtSelectedImages.length === 0) { triggerToast(t('edt_toast_select_image_first'), "danger"); return; }
+            const apiKeyField = document.getElementById('edtApiKeyInput');
+            const apiKey = (apiKeyField.value || '').trim();
+            if (!apiKey) { triggerToast(t('edt_toast_enter_api_key'), "danger"); return; }
+            try { localStorage.setItem('dhl_edt_api_key', apiKey); } catch (e) {}
+
+            const btn = document.getElementById('edtAnalyzeBtn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${t('edt_analyzing_label')}`;
+
+            try {
+                const rawRows = await callGeminiForEdtExtraction(apiKey);
+                const { rows, totals } = computeEdtSummary(rawRows);
+                edtLastResultRows = rows;
+                edtLastResultTotals = totals;
+                renderEdtResultTable(rows, totals);
+                document.getElementById('edtResultWrap').style.display = 'block';
+                document.getElementById('edtResultDateLabel').textContent = formatLocalizedDateTitle(todayStr());
+                triggerToast(t('edt_toast_analyze_success'), "success");
+                document.getElementById('edtResultWrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (err) {
+                console.error(err);
+                triggerToast(t('edt_toast_analyze_fail') + (err && err.message ? `: ${err.message}` : ''), "danger");
+            } finally {
+                btn.disabled = edtSelectedImages.length === 0;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        async function callGeminiForEdtExtraction(apiKey) {
+            const instruction = `You are reading one or more screenshots of an "EDT_Status_Check" courier report from a warehouse dispatch system (columns may include: USERNAME(COURIER), Non use, EDT 12:00, EDT 17:00, EDT 20:00 under a "EDT Close Status" group, and sometimes a separate "EDT Pending Close Status" group that also has its own EDT 12:00 / 17:00 / 20:00 sub-columns, plus other columns like "Non use EDT", "Other", "Total" that you should IGNORE).
+
+For every data row across all provided images, extract:
+- username: the exact courier username text (e.g. "bpeq04_lmpth")
+- nonUse: the number in the "Non use" column (0 if blank)
+- edt12Close: the number in "EDT Close Status" > "EDT 12:00" (0 if blank)
+- edt17Close: the number in "EDT Close Status" > "EDT 17:00" (0 if blank)
+- edt20Close: the number in "EDT Close Status" > "EDT 20:00" (0 if blank)
+- edt12Pending: the number in "EDT Pending Close Status" > "EDT 12:00" if that group/column exists in the image (0 if blank or absent)
+- edt17Pending: the number in "EDT Pending Close Status" > "EDT 17:00" if that group/column exists (0 if blank or absent)
+- edt20Pending: the number in "EDT Pending Close Status" > "EDT 20:00" if that group/column exists (0 if blank or absent)
+
+Include every data row you can read, even ones that look irrelevant (e.g. usernames like "r01", "r02") — do not filter anything yourself, just extract raw numbers exactly as shown. If the same username appears in more than one image (e.g. the screenshots overlap), include it only once using the most complete/non-blank reading.
+
+Respond with ONLY a raw JSON array (no markdown fences, no explanation, no extra text), like:
+[{"username":"bpeq04_lmpth","nonUse":2,"edt12Close":24,"edt17Close":0,"edt20Close":0,"edt12Pending":0,"edt17Pending":0,"edt20Pending":0}, ...]`;
+
+            const parts = [];
+            edtSelectedImages.forEach(img => {
+                parts.push({ inline_data: { mime_type: img.mediaType, data: img.base64 } });
+            });
+            parts.push({ text: instruction });
+
+            const model = 'gemini-2.5-flash';
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': apiKey
+                },
+                body: JSON.stringify({
+                    contents: [{ role: 'user', parts }],
+                    generationConfig: { temperature: 0, responseMimeType: 'application/json' }
+                })
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`API ${response.status}: ${errText.slice(0, 200)}`);
+            }
+            const data = await response.json();
+            const candidate = (data.candidates || [])[0];
+            const textPart = candidate && candidate.content && (candidate.content.parts || []).find(p => typeof p.text === 'string');
+            if (!textPart) throw new Error('No text response from API');
+            let jsonText = textPart.text.trim();
+            jsonText = jsonText.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '').trim();
+            const arrStart = jsonText.indexOf('[');
+            const arrEnd = jsonText.lastIndexOf(']');
+            if (arrStart >= 0 && arrEnd > arrStart) jsonText = jsonText.slice(arrStart, arrEnd + 1);
+            const parsed = JSON.parse(jsonText);
+            if (!Array.isArray(parsed)) throw new Error('Unexpected response format');
+            return parsed;
+        }
+
+        function computeEdtSummary(rawRows) {
+            const filtered = rawRows.filter(r => courierMatchesEdtPrefix(r.username));
+            const rows = filtered.map(r => {
+                const nonUse = Number(r.nonUse) || 0;
+                const edt12 = (Number(r.edt12Close) || 0) + (Number(r.edt12Pending) || 0);
+                const edt17 = (Number(r.edt17Close) || 0) + (Number(r.edt17Pending) || 0);
+                const edt20 = (Number(r.edt20Close) || 0) + (Number(r.edt20Pending) || 0);
+                const total = nonUse + edt12 + edt17 + edt20;
+                const edtPct = total > 0 ? ((edt12 + edt17 + edt20) / total) * 100 : 0;
+                return { username: r.username, nonUse, edt12, edt17, edt20, total, edtPct };
+            }).sort((a, b) => a.username.localeCompare(b.username));
+
+            const totals = rows.reduce((acc, r) => {
+                acc.nonUse += r.nonUse; acc.edt12 += r.edt12; acc.edt17 += r.edt17; acc.edt20 += r.edt20; acc.total += r.total;
+                return acc;
+            }, { nonUse: 0, edt12: 0, edt17: 0, edt20: 0, total: 0 });
+            totals.edtPct = totals.total > 0 ? ((totals.edt12 + totals.edt17 + totals.edt20) / totals.total) * 100 : 0;
+
+            return { rows, totals };
+        }
+
+        function renderEdtResultTable(rows, totals) {
+            const table = document.getElementById('edtResultTable');
+            if (!table) return;
+            const pctCellHtml = (pct) => {
+                const cls = pct >= 98 ? 'edt-pct-ok' : 'edt-pct-warn';
+                return `<td class="edt-pct-cell ${cls}">${pct.toFixed(2)}</td>`;
+            };
+            let html = `<thead><tr>
+                <th>${t('edt_col_courier')}</th>
+                <th>${t('edt_col_nonuse')}</th>
+                <th>EDT 12:00</th>
+                <th>EDT 17:00</th>
+                <th>EDT 20:00</th>
+                <th>${t('edt_col_total')}</th>
+                <th>EDT %</th>
+            </tr></thead><tbody>`;
+            rows.forEach(r => {
+                html += `<tr>
+                    <td>${r.username}</td>
+                    <td>${r.nonUse || ''}</td>
+                    <td>${r.edt12 || ''}</td>
+                    <td>${r.edt17 || ''}</td>
+                    <td>${r.edt20 || ''}</td>
+                    <td>${r.total}</td>
+                    ${pctCellHtml(r.edtPct)}
+                </tr>`;
+            });
+            html += `<tr class="edt-total-row">
+                <td>${t('edt_row_total')}</td>
+                <td>${totals.nonUse}</td>
+                <td>${totals.edt12}</td>
+                <td>${totals.edt17}</td>
+                <td>${totals.edt20}</td>
+                <td>${totals.total}</td>
+                ${pctCellHtml(totals.edtPct)}
+            </tr>`;
+            html += `</tbody>`;
+            table.innerHTML = html;
+        }
+
+        async function exportEdtImage() {
+            if (!window.html2canvas) { triggerToast(t("toast_export_tool_load_fail"), "danger"); return; }
+            const target = document.getElementById('edtResultCard');
+            if (!target) return;
+            triggerToast(t("toast_generating_report_image"), "success");
+            try {
+                const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2 });
+                const link = document.createElement('a');
+                link.download = `edt_summary_${todayStr()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            } catch (err) {
+                console.error(err);
+                triggerToast(t("toast_export_image_fail"), "danger");
+            }
+        }
+
+        function exportEdtCsv() {
+            if (!edtLastResultRows || edtLastResultRows.length === 0) { triggerToast(t("toast_no_data_export"), "warning"); return; }
+            let csv = "USERNAME(COURIER),Non use,EDT 12:00,EDT 17:00,EDT 20:00,Total,EDT %\n";
+            edtLastResultRows.forEach(r => {
+                csv += `"${r.username}",${r.nonUse},${r.edt12},${r.edt17},${r.edt20},${r.total},${r.edtPct.toFixed(2)}\n`;
+            });
+            csv += `"${t('edt_row_total')}",${edtLastResultTotals.nonUse},${edtLastResultTotals.edt12},${edtLastResultTotals.edt17},${edtLastResultTotals.edt20},${edtLastResultTotals.total},${edtLastResultTotals.edtPct.toFixed(2)}\n`;
+            downloadCsv(csv, `edt_summary_${todayStr()}.csv`);
         }
 
         let pphData = {
