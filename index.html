@@ -764,6 +764,13 @@
 
         .edt-loading-note { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--dhl-grey); margin-top: 10px; }
 
+        /* ===== QUICK DAILY REPORT ===== */
+        .quick-report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .quick-report-block { background: var(--light-gray); border-left: 4px solid var(--dhl-yellow-deep); border-radius: 8px; padding: 10px 12px; }
+        .quick-report-block-title { font-size: 11px; font-weight: 700; color: var(--dhl-grey); display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .quick-report-block-value { font-size: 20px; font-weight: 800; color: var(--dhl-dark); }
+        .quick-report-block-sub { font-size: 10.5px; color: var(--dhl-grey); margin-top: 2px; }
+
         .leave-card, .attendance-card {
 
             background: var(--light-gray); border-radius: 10px; padding: 12px 14px;
@@ -1608,6 +1615,8 @@
 
                         <div class="pd-preview-actions" id="pdConfirmRow" style="display:none;">
 
+                            <button type="button" class="btn-delete-sm" style="flex:0 0 auto; display:flex; align-items:center; justify-content:center; gap:5px; padding:0 14px;" onclick="discardPdPhoto()"><i class="fa-solid fa-trash"></i> <span>ลบรูปนี้</span></button>
+
                             <button type="button" class="ghost-btn" onclick="retakePdPhoto()"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="pd_btn_retake">ถ่ายใหม่</span></button>
 
                             <button type="button" class="submit-btn" style="background:#7c3aed;" onclick="confirmSavePdPhoto()"><i class="fa-solid fa-check"></i> <span data-i18n="pd_btn_confirm">ยืนยันบันทึก</span></button>
@@ -2218,28 +2227,226 @@
 
 
 
-                <div class="admin-card" id="adminCardSupervisor">
+                <div class="admin-card" id="adminCardQrUsage">
 
                     <div class="section-title-form">
 
-                        <i class="fa-solid fa-users-gear" style="color: var(--dhl-dark);"></i>
+                        <i class="fa-solid fa-qrcode" style="color:#0891b2;"></i>
 
-                        <span>สรุปรายวันแยกตามกลุ่มผู้ดูแล (EDT % / เคสส่งไม่สำเร็จ / QR Payment %)</span>
+                        <span>สรุป %QR Payment รายคน (ถ่ายรูปแล้วดึงตัวเลขอัตโนมัติ)</span>
+
+                    </div>
+
+                    <div class="rules-card" style="border-top-color:#0891b2; margin-bottom:12px;">
+
+                        <div style="font-size:11px; color:#4a5568; line-height:1.7;">
+
+                            ถ่ายรูปหรืออัปโหลดตารางรายงาน PD (ต้องมีคอลัมน์ USERNAME(COURIER) และ %QR Usage เหมือนตัวอย่าง) ระบบจะใช้ AI อ่านเฉพาะชื่อพนักงานกับค่า %QR Usage แล้วเติมลงช่องให้อัตโนมัติ — ใช้ Google Gemini API Key ช่องเดียวกันกับด้านบน (การ์ด "สรุป EDT")
+
+                        </div>
 
                     </div>
 
                     <div class="input-group">
 
-                        <label>เลือกวันที่ต้องการสรุป</label>
+                        <label>รูปภาพตาราง PD (เลือกได้หลายรูป)</label>
 
-                        <input type="date" id="supervisorSummaryDate" class="form-input" onchange="renderSupervisorSummary()">
+                        <input type="file" id="qrImageInput" accept="image/*" multiple style="display:none;" onchange="handleQrImageSelect(event)">
+
+                        <div style="display:flex; gap:8px;">
+
+                            <button type="button" class="ghost-btn" style="flex:2;" onclick="document.getElementById('qrImageInput').click()">
+
+                                <i class="fa-solid fa-camera"></i> <span>เลือก/ถ่ายรูปตาราง</span>
+
+                            </button>
+
+                            <button type="button" class="btn-delete-sm" id="qrClearImagesBtn" style="flex:1; display:none; align-items:center; justify-content:center; gap:5px;" onclick="clearQrImages()">
+
+                                <i class="fa-solid fa-broom"></i> <span>ล้างรูป</span>
+
+                            </button>
+
+                        </div>
+
+                        <div class="edt-thumb-row" id="qrThumbRow"></div>
 
                     </div>
 
+                    <button type="button" class="submit-btn" id="qrAnalyzeBtn" style="background:#0891b2;" onclick="analyzeQrImages()" disabled>
+
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> <span>วิเคราะห์ %QR Payment</span>
+
+                    </button>
+
+                    <div id="qrResultWrap" style="display:none; margin-top:14px;">
+
+                        <div id="qrResultCard" class="edt-result-card">
+
+                            <div class="edt-result-header">
+
+                                <div class="dhl-brand-block" style="font-size:22px;">DHL</div>
+
+                                <div class="edt-result-title-group">
+
+                                    <div class="edt-result-title">QR Payment Usage Summary</div>
+
+                                    <div class="edt-result-subtitle" id="qrResultDateLabel">-</div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="edt-table-wrapper">
+
+                                <table class="edt-table" id="qrResultTable"></table>
+
+                            </div>
+
+                        </div>
+
+                        <div style="display:flex; gap:8px; margin-top:10px;">
+
+                            <button type="button" class="ghost-btn" onclick="exportQrImage()"><i class="fa-solid fa-image"></i> <span>บันทึกเป็นรูปภาพ</span></button>
+
+                            <button type="button" class="btn-export" style="flex:1; min-height:46px; border-radius:6px;" onclick="exportQrCsv()"><i class="fa-solid fa-file-arrow-down"></i> <span>ดึงเป็น CSV</span></button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="admin-card" id="adminCardBooking">
+
+                    <div class="section-title-form">
+
+                        <i class="fa-solid fa-clipboard-list" style="color:#d97706;"></i>
+
+                        <span>สรุปการรับงาน (ถ่ายรูปแล้วดึงตัวเลขอัตโนมัติ)</span>
+
+                    </div>
+
+                    <div class="rules-card" style="border-top-color:#d97706; margin-bottom:12px;">
+
+                        <div style="font-size:11px; color:#4a5568; line-height:1.7;">
+
+                            ถ่ายรูปหรืออัปโหลดตารางสรุปการรับงานรายทัวร์ (คอลัมน์ Booking, Early%, Ontime%, Late%, Success%, Early, Ontime, Late, Success Booking เหมือนตัวอย่าง) ระบบจะใช้ AI อ่านและรวมยอดต่อพนักงานให้อัตโนมัติ (รวมหลายทัวร์ของคนเดียวกันในวันนั้นให้ด้วย) — ใช้ Google Gemini API Key ช่องเดียวกันกับด้านบน
+
+                        </div>
+
+                    </div>
+
+                    <div class="input-group">
+
+                        <label>รูปภาพตารางสรุปการรับงาน (เลือกได้หลายรูป)</label>
+
+                        <input type="file" id="bkImageInput" accept="image/*" multiple style="display:none;" onchange="handleBkImageSelect(event)">
+
+                        <div style="display:flex; gap:8px;">
+
+                            <button type="button" class="ghost-btn" style="flex:2;" onclick="document.getElementById('bkImageInput').click()">
+
+                                <i class="fa-solid fa-camera"></i> <span>เลือก/ถ่ายรูปตาราง</span>
+
+                            </button>
+
+                            <button type="button" class="btn-delete-sm" id="bkClearImagesBtn" style="flex:1; display:none; align-items:center; justify-content:center; gap:5px;" onclick="clearBkImages()">
+
+                                <i class="fa-solid fa-broom"></i> <span>ล้างรูป</span>
+
+                            </button>
+
+                        </div>
+
+                        <div class="edt-thumb-row" id="bkThumbRow"></div>
+
+                    </div>
+
+                    <button type="button" class="submit-btn" id="bkAnalyzeBtn" style="background:#d97706;" onclick="analyzeBkImages()" disabled>
+
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> <span>วิเคราะห์สรุปการรับงาน</span>
+
+                    </button>
+
+                    <div id="bkResultWrap" style="display:none; margin-top:14px;">
+
+                        <div id="bkResultCard" class="edt-result-card">
+
+                            <div class="edt-result-header">
+
+                                <div class="dhl-brand-block" style="font-size:22px;">DHL</div>
+
+                                <div class="edt-result-title-group">
+
+                                    <div class="edt-result-title">Booking Summary</div>
+
+                                    <div class="edt-result-subtitle" id="bkResultDateLabel">-</div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="edt-table-wrapper">
+
+                                <table class="edt-table" id="bkResultTable"></table>
+
+                            </div>
+
+                        </div>
+
+                        <div style="display:flex; gap:8px; margin-top:10px;">
+
+                            <button type="button" class="ghost-btn" onclick="exportBkImage()"><i class="fa-solid fa-image"></i> <span>บันทึกเป็นรูปภาพ</span></button>
+
+                            <button type="button" class="btn-export" style="flex:1; min-height:46px; border-radius:6px;" onclick="exportBkCsv()"><i class="fa-solid fa-file-arrow-down"></i> <span>ดึงเป็น CSV</span></button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="admin-card" id="adminCardSupervisor">
+                    <div class="section-title-form">
+                        <i class="fa-solid fa-users-gear" style="color: var(--dhl-dark);"></i>
+                        <span>สรุปรายวันแยกตามกลุ่มผู้ดูแล (EDT % / เคสเดลไม่ได้รับ / QR Payment %)</span>
+                    </div>
+                    <div class="input-group">
+                        <label>เลือกวันที่ต้องการสรุป</label>
+                        <input type="date" id="supervisorSummaryDate" class="form-input" onchange="renderSupervisorSummary()">
+                    </div>
                     <div class="record-list" id="supervisorGroupCards"></div>
+                    <div class="report-note">ค่า "เคสเดลไม่ได้รับ" กรอกเป็นรายคนต่อกลุ่ม (เลือกชื่อพนักงานแล้วระบุจำนวนเคส) ระบบจะรวมยอดให้อัตโนมัติ ส่วน "QR Payment" เป็นตัวเลขที่กรอกเองต่อกลุ่ม ระบบจะบันทึกแยกตามวันที่ให้อัตโนมัติ ส่วนค่า EDT % จะดึงจากผลวิเคราะห์ EDT ล่าสุดของวันนั้นในแท็บ "สรุป EDT" — ถ้ายังไม่เคยวิเคราะห์ EDT ของวันที่นี้ จะแสดงว่า "ไม่มีข้อมูล"</div>
+                </div>
 
-                    <div class="report-note">ค่า "เคสส่งไม่สำเร็จ" และ "QR Payment" เป็นตัวเลขที่กรอกเองต่อกลุ่ม ระบบจะบันทึกแยกตามวันที่ให้อัตโนมัติ ส่วนค่า EDT % จะดึงจากผลวิเคราะห์ EDT ล่าสุดของวันนั้นในแท็บ "สรุป EDT" — ถ้ายังไม่เคยวิเคราะห์ EDT ของวันที่นี้ จะแสดงว่า "ไม่มีข้อมูล"</div>
-
+                <div class="admin-card" id="adminCardQuickReport">
+                    <div class="section-title-form">
+                        <i class="fa-solid fa-file-invoice" style="color:var(--dhl-dark);"></i>
+                        <span>สรุป Report ประจำวัน</span>
+                    </div>
+                    <div class="input-group">
+                        <label>เลือกวันที่ต้องการออกรายงาน</label>
+                        <input type="date" id="quickReportDate" class="form-input">
+                    </div>
+                    <button type="button" class="submit-btn" style="background:var(--dhl-dark);" onclick="generateQuickReport()"><i class="fa-solid fa-file-invoice"></i> สรุป Report</button>
+                    <div id="quickReportWrap" style="display:none; margin-top:14px;">
+                        <div id="quickReportCard" class="edt-result-card">
+                            <div class="edt-result-header">
+                                <div class="dhl-brand-block" style="font-size:22px;">DHL</div>
+                                <div class="edt-result-title-group">
+                                    <div class="edt-result-title">Daily Operations Report</div>
+                                    <div class="edt-result-subtitle" id="quickReportDateLabel">-</div>
+                                </div>
+                            </div>
+                            <div id="quickReportBody" style="padding:14px;"></div>
+                        </div>
+                        <button type="button" class="ghost-btn" style="width:100%; margin-top:10px;" onclick="exportQuickReportImage()"><i class="fa-solid fa-image"></i> บันทึกเป็นรูปภาพ</button>
+                    </div>
                 </div>
 
                 </div>
@@ -6186,6 +6393,61 @@
 
         }
 
+        // ===================== QR USAGE DAILY (Supabase table: qr_usage_daily) =====================
+        // Expected columns: id (auto), qr_date (date, unique), rows_json (jsonb), updated_at (auto).
+        async function sbSelectQrUsageDaily(dateStr) {
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/qr_usage_daily?qr_date=eq.${dateStr}&select=*`, { method: "GET", headers: SB_HEADERS });
+            if (!res.ok) throw new Error("GET failed: " + res.status);
+            const rows = await res.json();
+            return rows.length ? rows[0] : null;
+        }
+        async function sbUpsertQrUsageDaily(record) {
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/qr_usage_daily`, {
+                method: "POST",
+                headers: { ...SB_HEADERS, "Prefer": "resolution=merge-duplicates,return=minimal" },
+                body: JSON.stringify(record)
+            });
+            if (!res.ok) { const errText = await res.text(); throw new Error("UPSERT failed: " + res.status + " " + errText); }
+        }
+
+        // ===================== BOOKING SUMMARY DAILY (Supabase table: booking_summary_daily) =====================
+        // Expected columns: id (auto), bk_date (date, unique), rows_json (jsonb), totals_json (jsonb), updated_at (auto).
+        async function sbSelectBookingSummaryDaily(dateStr) {
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/booking_summary_daily?bk_date=eq.${dateStr}&select=*`, { method: "GET", headers: SB_HEADERS });
+            if (!res.ok) throw new Error("GET failed: " + res.status);
+            const rows = await res.json();
+            return rows.length ? rows[0] : null;
+        }
+        async function sbUpsertBookingSummaryDaily(record) {
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/booking_summary_daily`, {
+                method: "POST",
+                headers: { ...SB_HEADERS, "Prefer": "resolution=merge-duplicates,return=minimal" },
+                body: JSON.stringify(record)
+            });
+            if (!res.ok) { const errText = await res.text(); throw new Error("UPSERT failed: " + res.status + " " + errText); }
+        }
+
+        // ===================== MISSED DELIVERY ("Del ไม่ได้รับ") DAILY (Supabase table: missed_delivery_daily) =====================
+        // Expected columns: id (auto), missed_date (date), courier_name (text), case_count (int), updated_at (auto).
+        // Recommended: UNIQUE constraint on (missed_date, courier_name) so re-adding the same person the same day updates their count.
+        async function sbSelectMissedCase(dateStr) {
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/missed_delivery_daily?missed_date=eq.${dateStr}&select=*`, { method: "GET", headers: SB_HEADERS });
+            if (!res.ok) throw new Error("GET failed: " + res.status);
+            return await res.json();
+        }
+        async function sbUpsertMissedCase(record) {
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/missed_delivery_daily`, {
+                method: "POST",
+                headers: { ...SB_HEADERS, "Prefer": "resolution=merge-duplicates,return=minimal" },
+                body: JSON.stringify(record)
+            });
+            if (!res.ok) { const errText = await res.text(); throw new Error("UPSERT failed: " + res.status + " " + errText); }
+        }
+        async function sbDeleteMissedCase(id) {
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/missed_delivery_daily?id=eq.${id}`, { method: "DELETE", headers: SB_HEADERS });
+            if (!res.ok) throw new Error("DELETE failed: " + res.status);
+        }
+
         function matchEdtUsernameToCourierGroup(username) {
 
             const u = (username || '').toUpperCase();
@@ -6291,6 +6553,14 @@
             });
 
             if (!res.ok) { const errText = await res.text(); throw new Error("UPSERT failed: " + res.status + " " + errText); }
+
+        }
+
+        async function sbDeletePdPhoto(dateStr) {
+
+            const res = await fetchWithTimeout(`${SB_URL}/rest/v1/pd_photos?pd_date=eq.${dateStr}`, { method: "DELETE", headers: SB_HEADERS });
+
+            if (!res.ok) throw new Error("DELETE failed: " + res.status);
 
         }
 
@@ -7260,6 +7530,12 @@
 
             document.getElementById('adminCardEdt').classList.toggle('show', tab === 'edt');
 
+            document.getElementById('adminCardQrUsage').classList.toggle('show', tab === 'edt');
+
+            document.getElementById('adminCardBooking').classList.toggle('show', tab === 'edt');
+
+            document.getElementById('adminCardQuickReport').classList.toggle('show', tab === 'supervisor');
+
             document.getElementById('adminCardSupervisor').classList.toggle('show', tab === 'supervisor');
 
             if (tab === 'supervisor') {
@@ -7267,6 +7543,10 @@
                 const dateField = document.getElementById('supervisorSummaryDate');
 
                 if (dateField && !dateField.value) dateField.value = todayStr();
+
+                const reportDateField = document.getElementById('quickReportDate');
+
+                if (reportDateField && !reportDateField.value) reportDateField.value = todayStr();
 
                 renderSupervisorSummary();
 
@@ -8446,6 +8726,8 @@
 
                         <button type="button" class="btn-dark-sm" onclick="retakePdFromStatus()"><i class="fa-solid fa-rotate-right"></i> ${t('pd_retake_btn')}</button>
 
+                        <button type="button" class="btn-delete-sm" onclick="deletePdPhotoToday()"><i class="fa-solid fa-trash"></i> ลบรูป</button>
+
                     </div>
 
                 </div>`;
@@ -8453,6 +8735,52 @@
         }
 
         function retakePdFromStatus() { openPdCamera(); }
+
+        function discardPdPhoto() {
+
+            pdPendingPhotoDataUrl = null;
+
+            const previewImg = document.getElementById('pdPreviewImg');
+
+            if (previewImg) { previewImg.style.display = 'none'; previewImg.src = ''; }
+
+            document.getElementById('pdConfirmRow').style.display = 'none';
+
+            document.getElementById('pdCaptureBtn').style.display = 'none';
+
+            document.getElementById('pdOpenCameraBtn').style.display = 'inline-block';
+
+            triggerToast('ลบรูปนี้แล้ว ถ่ายใหม่ได้เลย', 'success');
+
+        }
+
+        async function deletePdPhotoToday() {
+
+            if (!pdTodayRecord) return;
+
+            if (!confirm('ต้องการลบรูป PD ของวันนี้ใช่หรือไม่? การลบไม่สามารถกู้คืนได้')) return;
+
+            try {
+
+                await sbDeletePdPhoto(todayStr());
+
+                pdTodayRecord = null;
+
+                renderPdTodayStatus();
+
+                renderDayTimeline();
+
+                triggerToast('ลบรูป PD ของวันนี้เรียบร้อยแล้ว', 'success');
+
+            } catch (err) {
+
+                console.error(err);
+
+                triggerToast('ลบไม่สำเร็จ กรุณาลองใหม่', 'danger');
+
+            }
+
+        }
 
 
 
@@ -9821,162 +10149,145 @@
         // ===================== SUPERVISOR GROUP DAILY SUMMARY =====================
 
         async function renderSupervisorSummary() {
-
             const dateField = document.getElementById('supervisorSummaryDate');
-
             const box = document.getElementById('supervisorGroupCards');
-
             if (!dateField || !box) return;
-
             const dateStr = dateField.value || todayStr();
-
             box.innerHTML = `<div class="empty-state-note">${t('loading_latest')}</div>`;
 
-
-
             let groupOpsRows = [];
-
             try { groupOpsRows = await sbSelectGroupOps(dateStr); }
-
             catch (err) { console.warn("sbSelectGroupOps error (create table group_ops_daily to persist):", err); }
-
             const edtGroupStats = await computeGroupEdtStatsForDate(dateStr);
 
-
+            let missedRows = [];
+            try { missedRows = await sbSelectMissedCase(dateStr); }
+            catch (err) { console.warn("sbSelectMissedCase error (create table missed_delivery_daily to persist):", err); }
 
             box.innerHTML = '';
-
             GROUP_KEYS.forEach(gk => {
-
                 const meta = GROUP_META[gk];
-
-                const courierCount = COURIER_LIST.filter(c => c.group === gk).length;
-
+                const groupCouriers = COURIER_LIST.filter(c => c.group === gk);
+                const courierCount = groupCouriers.length;
                 const savedRow = groupOpsRows.find(r => r.group_key === gk) || {};
-
                 const edtStat = edtGroupStats[gk];
-
                 const edtPctText = (edtStat && edtStat.total > 0) ? (edtStat.edtSum / edtStat.total * 100).toFixed(1) + '%' : 'ไม่มีข้อมูล';
-
                 const qrTotalVal = savedRow.qr_total_count;
-
                 const qrUsedVal = savedRow.qr_used_count;
-
                 const qrPctText = (qrTotalVal != null && qrTotalVal > 0) ? ((qrUsedVal || 0) / qrTotalVal * 100).toFixed(1) + '%' : 'ไม่มีข้อมูล';
 
+                const groupMissedRows = (missedRows || []).filter(r => matchMissedCaseNameToGroup(r.courier_name) === gk);
+                const groupMissedTotal = groupMissedRows.reduce((a, r) => a + (r.case_count || 0), 0);
 
+                const missedListHtml = groupMissedRows.length
+                    ? groupMissedRows.map(r => `
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid ${meta.border}; border-radius:6px; padding:6px 10px; margin-top:6px;">
+                            <span style="font-size:11.5px; font-weight:600;">${r.courier_name} <span style="color:var(--dhl-red); font-weight:800;">${r.case_count}</span> เคส</span>
+                            <button class="btn-delete-sm" onclick="deleteGroupMissedCaseEntry(${r.id}, '${gk}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>`).join('')
+                    : `<div style="font-size:11px; color:var(--dhl-grey); margin-top:6px;">ยังไม่มีการบันทึกเคสเดลไม่ได้รับของกลุ่มนี้วันนี้</div>`;
+
+                const datalistId = `missedGroupOptions_${gk}`;
 
                 const card = document.createElement('div');
-
                 card.className = 'leave-card';
-
                 card.style.borderLeftColor = meta.color;
-
                 card.style.background = meta.bg;
-
                 card.innerHTML = `
-
                     <div class="leave-card-top">
-
                         <div>
-
                             <div class="leave-card-name" style="color:${meta.color};">${meta.emoji} ${meta.label} · ผู้ดูแล ${meta.supervisor}</div>
-
                             <div class="leave-card-meta">พนักงานในกลุ่ม ${courierCount} คน</div>
-
                         </div>
-
                         <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
-
                             <span class="status-badge" style="background:#fff;color:${meta.color};border:1px solid ${meta.border};">EDT ${edtPctText}</span>
-
                             <span class="status-badge" style="background:#fff;color:#0891b2;border:1px solid #a5f3fc;">QR ${qrPctText}</span>
-
                         </div>
-
                     </div>
-
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
-
-                        <div class="input-group" style="margin-bottom:0;">
-
-                            <label style="font-size:10.5px;">เคสส่งไม่สำเร็จ (เคส)</label>
-
-                            <input type="number" min="0" class="form-input" id="failedDel_${gk}" value="${savedRow.failed_delivery_count != null ? savedRow.failed_delivery_count : ''}" placeholder="0">
-
+                    <div class="input-group" style="margin-bottom:0; margin-top:10px;">
+                        <label style="font-size:10.5px; display:flex; justify-content:space-between;"><span>เคสเดลไม่ได้รับ</span><span style="color:var(--dhl-red); font-weight:800;">รวม ${groupMissedTotal} เคส</span></label>
+                        <div style="display:flex; gap:6px; align-items:flex-end;">
+                            <input type="text" class="form-input" id="missedName_${gk}" list="${datalistId}" placeholder="ชื่อพนักงาน (เลือกจากรายชื่อ หรือพิมพ์เอง)" style="flex:2;">
+                            <datalist id="${datalistId}">
+                                ${groupCouriers.map(c => `<option value="${c.name ? (c.id + ' - ' + c.name) : c.id}"></option>`).join('')}
+                            </datalist>
+                            <input type="number" min="1" class="form-input" id="missedCount_${gk}" placeholder="จำนวน" style="flex:1; text-align:center;">
+                            <button type="button" class="btn-secondary-yellow" style="flex:0 0 auto; padding:0 12px;" onclick="addGroupMissedCaseEntry('${gk}')"><i class="fa-solid fa-plus"></i></button>
                         </div>
-
-                        <div class="input-group" style="margin-bottom:0;">
-
-                            <label style="font-size:10.5px;">QR Payment ใช้แล้ว / ทั้งหมด</label>
-
-                            <div style="display:flex; gap:4px; align-items:center;">
-
-                                <input type="number" min="0" class="form-input" id="qrUsed_${gk}" value="${qrUsedVal != null ? qrUsedVal : ''}" placeholder="ใช้แล้ว" style="text-align:center;">
-
-                                <span style="font-size:11px; color:var(--dhl-grey);">/</span>
-
-                                <input type="number" min="0" class="form-input" id="qrTotal_${gk}" value="${qrTotalVal != null ? qrTotalVal : ''}" placeholder="ทั้งหมด" style="text-align:center;">
-
-                            </div>
-
-                        </div>
-
+                        <div id="missedList_${gk}">${missedListHtml}</div>
                     </div>
-
+                    <div class="input-group" style="margin-bottom:0; margin-top:10px;">
+                        <label style="font-size:10.5px;">QR Payment ใช้แล้ว / ทั้งหมด</label>
+                        <div style="display:flex; gap:4px; align-items:center;">
+                            <input type="number" min="0" class="form-input" id="qrUsed_${gk}" value="${qrUsedVal != null ? qrUsedVal : ''}" placeholder="ใช้แล้ว" style="text-align:center;">
+                            <span style="font-size:11px; color:var(--dhl-grey);">/</span>
+                            <input type="number" min="0" class="form-input" id="qrTotal_${gk}" value="${qrTotalVal != null ? qrTotalVal : ''}" placeholder="ทั้งหมด" style="text-align:center;">
+                        </div>
+                    </div>
                     <button type="button" class="btn-secondary-yellow" style="width:100%; margin-top:8px;" onclick="saveGroupOpsData('${gk}')"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลกลุ่มนี้</button>
-
                 `;
-
                 box.appendChild(card);
-
             });
-
         }
 
+        // Match a missed-case courier_name entry (e.g. "BPET16 - Raphiphat Khamsuk"
+        // or a plain name) to a supervisor color group, by ID prefix or name text.
+        function matchMissedCaseNameToGroup(name) {
+            const u = (name || '').toUpperCase();
+            let courier = COURIER_LIST.find(c => u.startsWith(c.id.toUpperCase()) || u.includes(' ' + c.id.toUpperCase()) || u === c.id.toUpperCase());
+            if (!courier) courier = COURIER_LIST.find(c => c.name && u.includes(c.name.toUpperCase()));
+            return courier ? (courier.group || '') : '';
+        }
 
+        async function addGroupMissedCaseEntry(groupKey) {
+            const dateStr = document.getElementById('supervisorSummaryDate').value || todayStr();
+            const nameField = document.getElementById(`missedName_${groupKey}`);
+            const countField = document.getElementById(`missedCount_${groupKey}`);
+            const name = (nameField.value || '').trim();
+            const count = parseInt(countField.value);
+            if (!name) { triggerToast('กรุณาระบุชื่อพนักงาน', 'danger'); return; }
+            if (isNaN(count) || count < 1) { triggerToast('กรุณากรอกจำนวนเคสให้ถูกต้อง', 'danger'); return; }
+            try {
+                await sbUpsertMissedCase({ missed_date: dateStr, courier_name: name, case_count: count });
+                nameField.value = ''; countField.value = '';
+                triggerToast('บันทึกเคสเดลไม่ได้รับเรียบร้อยแล้ว', 'success');
+                renderSupervisorSummary();
+            } catch (err) {
+                console.error(err);
+                triggerToast('บันทึกไม่สำเร็จ กรุณาสร้างตาราง missed_delivery_daily ก่อน (missed_date, courier_name เป็นคีย์คู่กัน)', 'danger');
+            }
+        }
+
+        async function deleteGroupMissedCaseEntry(id, groupKey) {
+            if (!confirm('ต้องการลบรายการนี้ใช่หรือไม่?')) return;
+            try {
+                await sbDeleteMissedCase(id);
+                triggerToast(t('toast_deleted'), 'success');
+                renderSupervisorSummary();
+            } catch (err) {
+                console.error(err);
+                triggerToast('ลบไม่สำเร็จ กรุณาลองใหม่', 'danger');
+            }
+        }
 
         async function saveGroupOpsData(groupKey) {
-
             const dateStr = document.getElementById('supervisorSummaryDate').value || todayStr();
-
-            const failedVal = parseInt(document.getElementById(`failedDel_${groupKey}`).value);
-
             const qrUsedVal = parseInt(document.getElementById(`qrUsed_${groupKey}`).value);
-
             const qrTotalVal = parseInt(document.getElementById(`qrTotal_${groupKey}`).value);
-
             try {
-
                 await sbUpsertGroupOps({
-
                     ops_date: dateStr,
-
                     group_key: groupKey,
-
-                    failed_delivery_count: isNaN(failedVal) ? null : failedVal,
-
                     qr_used_count: isNaN(qrUsedVal) ? null : qrUsedVal,
-
                     qr_total_count: isNaN(qrTotalVal) ? null : qrTotalVal
-
                 });
-
                 triggerToast("บันทึกข้อมูลกลุ่มเรียบร้อยแล้ว", "success");
-
                 renderSupervisorSummary();
-
             } catch (err) {
-
                 console.error(err);
-
                 triggerToast("บันทึกไม่สำเร็จ กรุณาสร้างตาราง group_ops_daily ก่อน", "danger");
-
             }
-
         }
-
-
 
         // ===================== EDT SUMMARY FEATURE =====================
 
@@ -10634,6 +10945,448 @@ Respond with ONLY a raw JSON array (no markdown fences, no explanation, no extra
 
             downloadCsv(csv, `edt_summary_${todayStr()}.csv`);
 
+        }
+
+
+        // ===================== SHARED GEMINI VISION HELPER (used by EDT/QR/Booking extraction) =====================
+        async function callGeminiVisionExtract(images, apiKey, instruction) {
+            const parts = [];
+            images.forEach(img => { parts.push({ inline_data: { mime_type: img.mediaType, data: img.base64 } }); });
+            parts.push({ text: instruction });
+            const modelCandidates = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+            let response = null;
+            let lastErrText = '';
+            for (const model of modelCandidates) {
+                response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+                    body: JSON.stringify({
+                        contents: [{ role: 'user', parts }],
+                        generationConfig: { temperature: 0, responseMimeType: 'application/json' }
+                    })
+                });
+                if (response.ok) break;
+                lastErrText = await response.text();
+                if (response.status !== 404) break;
+            }
+            if (!response.ok) throw new Error(`API ${response.status}: ${lastErrText.slice(0, 200)}`);
+            const data = await response.json();
+            const candidate = (data.candidates || [])[0];
+            const textPart = candidate && candidate.content && (candidate.content.parts || []).find(p => typeof p.text === 'string');
+            if (!textPart) throw new Error('No text response from API');
+            let jsonText = textPart.text.trim();
+            jsonText = jsonText.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '').trim();
+            const arrStart = jsonText.indexOf('[');
+            const arrEnd = jsonText.lastIndexOf(']');
+            if (arrStart >= 0 && arrEnd > arrStart) jsonText = jsonText.slice(arrStart, arrEnd + 1);
+            const parsed = JSON.parse(jsonText);
+            if (!Array.isArray(parsed)) throw new Error('Unexpected response format');
+            return parsed;
+        }
+        function getSharedGeminiApiKey() {
+            const field = document.getElementById('edtApiKeyInput');
+            return field ? (field.value || '').trim() : '';
+        }
+
+        // ===================== %QR PAYMENT USAGE EXTRACTION (per courier, from PD table photo) =====================
+        let qrSelectedImages = []; // { dataUrl, mediaType, base64 }
+        let qrLastResultRows = null;
+
+        async function handleQrImageSelect(event) {
+            const files = Array.from(event.target.files || []);
+            if (files.length === 0) return;
+            for (const file of files) {
+                try {
+                    const dataUrl = await resizeImageFileToDataUrl(file, 1600, 0.85);
+                    const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/.exec(dataUrl);
+                    if (match) qrSelectedImages.push({ dataUrl, mediaType: match[1], base64: match[2] });
+                } catch (e) { console.warn('QR image resize failed, skipping file:', e); }
+            }
+            renderQrThumbnails();
+            updateQrAnalyzeButtonState();
+            event.target.value = '';
+        }
+        function removeQrImage(idx) { qrSelectedImages.splice(idx, 1); renderQrThumbnails(); updateQrAnalyzeButtonState(); }
+        function clearQrImages() { qrSelectedImages = []; renderQrThumbnails(); updateQrAnalyzeButtonState(); }
+        function renderQrThumbnails() {
+            const row = document.getElementById('qrThumbRow');
+            const clearBtn = document.getElementById('qrClearImagesBtn');
+            if (!row) return;
+            row.innerHTML = '';
+            qrSelectedImages.forEach((img, idx) => {
+                const div = document.createElement('div');
+                div.className = 'edt-thumb';
+                div.innerHTML = `
+                    <img src="${img.dataUrl}" alt="PD table ${idx+1}">
+                    <span class="edt-thumb-num">#${idx+1}</span>
+                    <button type="button" class="edt-thumb-remove" onclick="removeQrImage(${idx})"><i class="fa-solid fa-xmark"></i></button>
+                `;
+                row.appendChild(div);
+            });
+            if (clearBtn) clearBtn.style.display = qrSelectedImages.length > 0 ? 'flex' : 'none';
+        }
+        function updateQrAnalyzeButtonState() {
+            const btn = document.getElementById('qrAnalyzeBtn');
+            if (btn) btn.disabled = qrSelectedImages.length === 0;
+        }
+
+        async function analyzeQrImages() {
+            if (qrSelectedImages.length === 0) { triggerToast('กรุณาเลือกหรือถ่ายรูปตารางก่อน', 'danger'); return; }
+            const apiKey = getSharedGeminiApiKey();
+            if (!apiKey) { triggerToast('กรุณากรอก Google Gemini API Key ในช่องด้านบน (การ์ด "สรุป EDT") ก่อนวิเคราะห์', 'danger'); return; }
+            try { localStorage.setItem('dhl_edt_api_key', apiKey); } catch (e) {}
+            const btn = document.getElementById('qrAnalyzeBtn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังวิเคราะห์...`;
+            try {
+                const rawRows = await callGeminiForQrExtraction(qrSelectedImages, apiKey);
+                const rows = rawRows
+                    .filter(r => r && typeof r.username === 'string' && r.username.trim())
+                    .map(r => ({
+                        username: r.username.trim(),
+                        qrUsagePct: (r.qrUsagePct === null || r.qrUsagePct === undefined || r.qrUsagePct === '') ? null : Number(r.qrUsagePct)
+                    }))
+                    .sort((a, b) => a.username.localeCompare(b.username));
+                if (rows.length === 0) { triggerToast('ไม่พบข้อมูลพนักงานในรูปนี้ กรุณาตรวจสอบรูปแล้วลองใหม่', 'warning'); return; }
+                qrLastResultRows = rows;
+                try { await sbUpsertQrUsageDaily({ qr_date: todayStr(), rows_json: rows }); }
+                catch (persistErr) { console.warn('QR persist failed (create table qr_usage_daily to persist):', persistErr); }
+                renderQrResultTable(rows);
+                document.getElementById('qrResultWrap').style.display = 'block';
+                document.getElementById('qrResultDateLabel').textContent = formatLocalizedDateTitle(todayStr());
+                triggerToast('สรุป %QR Payment สำเร็จแล้ว', 'success');
+                document.getElementById('qrResultWrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (err) {
+                console.error(err);
+                triggerToast('วิเคราะห์ไม่สำเร็จ กรุณาตรวจสอบ API Key และรูปภาพ' + (err && err.message ? `: ${err.message}` : ''), 'danger');
+            } finally {
+                btn.disabled = qrSelectedImages.length === 0;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        async function callGeminiForQrExtraction(images, apiKey) {
+            const instruction = `You are reading one or more screenshots/photos of a courier "PD" daily performance table from a warehouse dispatch system. Columns may include: USERNAME(COURIER), PROD Pcs., PROD STOP, Success%, Departure Time(MIN), 1st Del Success(MIN), STEMIN, Arrival Time(MIN), %EDT, %QR Usage, Estimate Distance.
+
+For every data row across all provided images, extract ONLY:
+- username: the exact text in the USERNAME(COURIER) column (e.g. "bpet16_lmpth")
+- qrUsagePct: the numeric percentage value in the "%QR Usage" column, WITHOUT the % sign (e.g. 71.43). If that cell is blank/empty for a row, use null.
+
+Ignore every other column. Skip any row that is a header, blank, or a totals row. If the same username appears in more than one image (e.g. overlapping screenshots), include it only once using the most complete (non-null) reading.
+
+Respond with ONLY a raw JSON array (no markdown fences, no explanation, no extra text), like:
+[{"username":"bpet16_lmpth","qrUsagePct":null},{"username":"bpet37_lmpth","qrUsagePct":71.43}]`;
+            return await callGeminiVisionExtract(images, apiKey, instruction);
+        }
+
+        function renderQrResultTable(rows) {
+            const table = document.getElementById('qrResultTable');
+            if (!table) return;
+            const withVal = rows.filter(r => r.qrUsagePct != null);
+            const avg = withVal.length ? (withVal.reduce((a, r) => a + r.qrUsagePct, 0) / withVal.length) : 0;
+            let html = `<thead><tr><th>USERNAME(COURIER)</th><th>%QR Usage</th></tr></thead><tbody>`;
+            rows.forEach(r => {
+                const cls = r.qrUsagePct == null ? '' : (r.qrUsagePct >= 30 ? 'edt-pct-ok' : 'edt-pct-warn');
+                html += `<tr><td>${r.username}</td><td class="edt-pct-cell ${cls}">${r.qrUsagePct == null ? '-' : r.qrUsagePct.toFixed(2) + '%'}</td></tr>`;
+            });
+            html += `<tr class="edt-total-row"><td>ค่าเฉลี่ยรวม (มีข้อมูล ${withVal.length}/${rows.length} คน)</td><td class="edt-pct-cell">${avg.toFixed(2)}%</td></tr>`;
+            html += `</tbody>`;
+            table.innerHTML = html;
+        }
+
+        async function exportQrImage() {
+            if (!window.html2canvas) { triggerToast(t("toast_export_tool_load_fail"), "danger"); return; }
+            const target = document.getElementById('qrResultCard');
+            const wrapper = target ? target.querySelector('.edt-table-wrapper') : null;
+            const table = document.getElementById('qrResultTable');
+            if (!target || !wrapper || !table) return;
+            triggerToast(t("toast_generating_report_image"), "success");
+            const fullWidth = table.scrollWidth;
+            const prevCardWidth = target.style.width, prevCardMaxWidth = target.style.maxWidth;
+            const prevWrapOverflow = wrapper.style.overflowX, prevWrapWidth = wrapper.style.width;
+            const prevBodyOverflowX = document.body.style.overflowX;
+            wrapper.scrollLeft = 0;
+            target.style.width = fullWidth + 'px'; target.style.maxWidth = 'none';
+            wrapper.style.overflowX = 'visible'; wrapper.style.width = fullWidth + 'px';
+            document.body.style.overflowX = 'visible';
+            try {
+                const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2, windowWidth: Math.max(document.documentElement.scrollWidth, fullWidth + 100) });
+                const link = document.createElement('a');
+                link.download = `qr_usage_summary_${todayStr()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            } catch (err) {
+                console.error(err);
+                triggerToast(t("toast_export_image_fail"), "danger");
+            } finally {
+                target.style.width = prevCardWidth; target.style.maxWidth = prevCardMaxWidth;
+                wrapper.style.overflowX = prevWrapOverflow; wrapper.style.width = prevWrapWidth;
+                document.body.style.overflowX = prevBodyOverflowX;
+            }
+        }
+        function exportQrCsv() {
+            if (!qrLastResultRows || qrLastResultRows.length === 0) { triggerToast(t("toast_no_data_export"), "warning"); return; }
+            let csv = "USERNAME(COURIER),%QR Usage\n";
+            qrLastResultRows.forEach(r => { csv += `"${r.username}",${r.qrUsagePct == null ? '' : r.qrUsagePct.toFixed(2)}\n`; });
+            downloadCsv(csv, `qr_usage_summary_${todayStr()}.csv`);
+        }
+
+        // ===================== BOOKING SUMMARY EXTRACTION (per courier, from Booking table photo) =====================
+        let bkSelectedImages = [];
+        let bkLastResultRows = null;
+        let bkLastResultTotals = null;
+
+        async function handleBkImageSelect(event) {
+            const files = Array.from(event.target.files || []);
+            if (files.length === 0) return;
+            for (const file of files) {
+                try {
+                    const dataUrl = await resizeImageFileToDataUrl(file, 1600, 0.85);
+                    const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/.exec(dataUrl);
+                    if (match) bkSelectedImages.push({ dataUrl, mediaType: match[1], base64: match[2] });
+                } catch (e) { console.warn('Booking image resize failed, skipping file:', e); }
+            }
+            renderBkThumbnails();
+            updateBkAnalyzeButtonState();
+            event.target.value = '';
+        }
+        function removeBkImage(idx) { bkSelectedImages.splice(idx, 1); renderBkThumbnails(); updateBkAnalyzeButtonState(); }
+        function clearBkImages() { bkSelectedImages = []; renderBkThumbnails(); updateBkAnalyzeButtonState(); }
+        function renderBkThumbnails() {
+            const row = document.getElementById('bkThumbRow');
+            const clearBtn = document.getElementById('bkClearImagesBtn');
+            if (!row) return;
+            row.innerHTML = '';
+            bkSelectedImages.forEach((img, idx) => {
+                const div = document.createElement('div');
+                div.className = 'edt-thumb';
+                div.innerHTML = `
+                    <img src="${img.dataUrl}" alt="Booking summary ${idx+1}">
+                    <span class="edt-thumb-num">#${idx+1}</span>
+                    <button type="button" class="edt-thumb-remove" onclick="removeBkImage(${idx})"><i class="fa-solid fa-xmark"></i></button>
+                `;
+                row.appendChild(div);
+            });
+            if (clearBtn) clearBtn.style.display = bkSelectedImages.length > 0 ? 'flex' : 'none';
+        }
+        function updateBkAnalyzeButtonState() {
+            const btn = document.getElementById('bkAnalyzeBtn');
+            if (btn) btn.disabled = bkSelectedImages.length === 0;
+        }
+
+        async function analyzeBkImages() {
+            if (bkSelectedImages.length === 0) { triggerToast('กรุณาเลือกหรือถ่ายรูปตารางก่อน', 'danger'); return; }
+            const apiKey = getSharedGeminiApiKey();
+            if (!apiKey) { triggerToast('กรุณากรอก Google Gemini API Key ในช่องด้านบน (การ์ด "สรุป EDT") ก่อนวิเคราะห์', 'danger'); return; }
+            try { localStorage.setItem('dhl_edt_api_key', apiKey); } catch (e) {}
+            const btn = document.getElementById('bkAnalyzeBtn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังวิเคราะห์...`;
+            try {
+                const rawRows = await callGeminiForBookingExtraction(bkSelectedImages, apiKey);
+                const rows = rawRows
+                    .filter(r => r && typeof r.username === 'string' && r.username.trim())
+                    .map(r => ({
+                        username: r.username.trim(),
+                        booking: Number(r.booking) || 0,
+                        earlyPct: (r.earlyPct == null || r.earlyPct === '') ? null : Number(r.earlyPct),
+                        ontimePct: (r.ontimePct == null || r.ontimePct === '') ? null : Number(r.ontimePct),
+                        latePct: (r.latePct == null || r.latePct === '') ? null : Number(r.latePct),
+                        successPct: (r.successPct == null || r.successPct === '') ? null : Number(r.successPct),
+                        early: Number(r.early) || 0,
+                        ontime: Number(r.ontime) || 0,
+                        late: Number(r.late) || 0,
+                        successBooking: Number(r.successBooking) || 0
+                    }))
+                    .sort((a, b) => a.username.localeCompare(b.username));
+                if (rows.length === 0) { triggerToast('ไม่พบข้อมูลพนักงานในรูปนี้ กรุณาตรวจสอบรูปแล้วลองใหม่', 'warning'); return; }
+                const totals = rows.reduce((acc, r) => {
+                    acc.booking += r.booking; acc.early += r.early; acc.ontime += r.ontime; acc.late += r.late; acc.successBooking += r.successBooking;
+                    return acc;
+                }, { booking: 0, early: 0, ontime: 0, late: 0, successBooking: 0 });
+                bkLastResultRows = rows;
+                bkLastResultTotals = totals;
+                try { await sbUpsertBookingSummaryDaily({ bk_date: todayStr(), rows_json: rows, totals_json: totals }); }
+                catch (persistErr) { console.warn('Booking persist failed (create table booking_summary_daily to persist):', persistErr); }
+                renderBkResultTable(rows, totals);
+                document.getElementById('bkResultWrap').style.display = 'block';
+                document.getElementById('bkResultDateLabel').textContent = formatLocalizedDateTitle(todayStr());
+                triggerToast('สรุปการรับงานสำเร็จแล้ว', 'success');
+                document.getElementById('bkResultWrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (err) {
+                console.error(err);
+                triggerToast('วิเคราะห์ไม่สำเร็จ กรุณาตรวจสอบ API Key และรูปภาพ' + (err && err.message ? `: ${err.message}` : ''), 'danger');
+            } finally {
+                btn.disabled = bkSelectedImages.length === 0;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        async function callGeminiForBookingExtraction(images, apiKey) {
+            const instruction = `You are reading one or more screenshots/photos of a "Booking Summary" report table from a courier dispatch system. There is a facility-level "Total" row near the top (skip it) and a grand "Total" row at the bottom (skip it too). Every other data row has a value in a column like "facilitycod/tourid" formatted as "LMPTH/<username>/<date>/<n>" (e.g. "LMPTH/bpet16_lmpth/2026-07-22/1"). Other columns are: Booking, Early%, Ontime%, Late%, Success%, Early, Ontime, Late, Success Booking.
+
+For every data row that has a facilitycod/tourid value in that "LMPTH/..." format, extract:
+- username: just the courier username portion between the slashes, e.g. from "LMPTH/bpet16_lmpth/2026-07-22/1" extract "bpet16_lmpth"
+- booking: the number in the Booking column (0 if blank)
+- earlyPct: numeric percent in the Early% column WITHOUT the % sign, null if blank
+- ontimePct: numeric percent in the Ontime% column WITHOUT the % sign, null if blank
+- latePct: numeric percent in the Late% column WITHOUT the % sign, null if blank
+- successPct: numeric percent in the Success% column WITHOUT the % sign, null if blank
+- early: number in the Early column, 0 if blank
+- ontime: number in the Ontime column, 0 if blank
+- late: number in the Late column, 0 if blank
+- successBooking: number in the "Success Booking" column, 0 if blank
+
+If the same username appears in more than one row (multiple tours that day), SUM the numeric count fields (booking, early, ontime, late, successBooking) across all its rows, and for the percent fields (earlyPct/ontimePct/latePct/successPct) use the value from whichever of its rows had the largest booking count (leave null if all of that username's rows have null there).
+
+Respond with ONLY a raw JSON array (no markdown fences, no explanation, no extra text), like:
+[{"username":"bpet16_lmpth","booking":17,"earlyPct":null,"ontimePct":null,"latePct":47.06,"successPct":9.09,"early":0,"ontime":1,"late":8,"successBooking":1}]`;
+            return await callGeminiVisionExtract(images, apiKey, instruction);
+        }
+
+        function renderBkResultTable(rows, totals) {
+            const table = document.getElementById('bkResultTable');
+            if (!table) return;
+            const pctText = (v) => v == null ? '-' : v.toFixed(2) + '%';
+            let html = `<thead><tr>
+                <th>Username</th><th>Booking</th><th>Early%</th><th>Ontime%</th><th>Late%</th><th>Success%</th>
+                <th>Early</th><th>Ontime</th><th>Late</th><th>Success Booking</th>
+            </tr></thead><tbody>`;
+            rows.forEach(r => {
+                html += `<tr>
+                    <td>${r.username}</td><td>${r.booking}</td><td>${pctText(r.earlyPct)}</td><td>${pctText(r.ontimePct)}</td><td>${pctText(r.latePct)}</td><td>${pctText(r.successPct)}</td>
+                    <td>${r.early}</td><td>${r.ontime}</td><td>${r.late}</td><td>${r.successBooking}</td>
+                </tr>`;
+            });
+            const totalSuccessPct = totals.booking > 0 ? (totals.successBooking / totals.booking * 100) : null;
+            html += `<tr class="edt-total-row">
+                <td>Total</td><td>${totals.booking}</td><td>-</td><td>-</td><td>-</td><td>${pctText(totalSuccessPct)}</td>
+                <td>${totals.early}</td><td>${totals.ontime}</td><td>${totals.late}</td><td>${totals.successBooking}</td>
+            </tr>`;
+            html += `</tbody>`;
+            table.innerHTML = html;
+        }
+
+        async function exportBkImage() {
+            if (!window.html2canvas) { triggerToast(t("toast_export_tool_load_fail"), "danger"); return; }
+            const target = document.getElementById('bkResultCard');
+            const wrapper = target ? target.querySelector('.edt-table-wrapper') : null;
+            const table = document.getElementById('bkResultTable');
+            if (!target || !wrapper || !table) return;
+            triggerToast(t("toast_generating_report_image"), "success");
+            const fullWidth = table.scrollWidth;
+            const prevCardWidth = target.style.width, prevCardMaxWidth = target.style.maxWidth;
+            const prevWrapOverflow = wrapper.style.overflowX, prevWrapWidth = wrapper.style.width;
+            const prevBodyOverflowX = document.body.style.overflowX;
+            wrapper.scrollLeft = 0;
+            target.style.width = fullWidth + 'px'; target.style.maxWidth = 'none';
+            wrapper.style.overflowX = 'visible'; wrapper.style.width = fullWidth + 'px';
+            document.body.style.overflowX = 'visible';
+            try {
+                const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2, windowWidth: Math.max(document.documentElement.scrollWidth, fullWidth + 100) });
+                const link = document.createElement('a');
+                link.download = `booking_summary_${todayStr()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            } catch (err) {
+                console.error(err);
+                triggerToast(t("toast_export_image_fail"), "danger");
+            } finally {
+                target.style.width = prevCardWidth; target.style.maxWidth = prevCardMaxWidth;
+                wrapper.style.overflowX = prevWrapOverflow; wrapper.style.width = prevWrapWidth;
+                document.body.style.overflowX = prevBodyOverflowX;
+            }
+        }
+        function exportBkCsv() {
+            if (!bkLastResultRows || bkLastResultRows.length === 0) { triggerToast(t("toast_no_data_export"), "warning"); return; }
+            let csv = "Username,Booking,Early%,Ontime%,Late%,Success%,Early,Ontime,Late,Success Booking\n";
+            const pctCsv = (v) => v == null ? '' : v.toFixed(2);
+            bkLastResultRows.forEach(r => {
+                csv += `"${r.username}",${r.booking},${pctCsv(r.earlyPct)},${pctCsv(r.ontimePct)},${pctCsv(r.latePct)},${pctCsv(r.successPct)},${r.early},${r.ontime},${r.late},${r.successBooking}\n`;
+            });
+            csv += `"Total",${bkLastResultTotals.booking},,,,,${bkLastResultTotals.early},${bkLastResultTotals.ontime},${bkLastResultTotals.late},${bkLastResultTotals.successBooking}\n`;
+            downloadCsv(csv, `booking_summary_${todayStr()}.csv`);
+        }
+
+        // ===================== QUICK DAILY REPORT (with DHL logo header) =====================
+        async function generateQuickReport() {
+            const dateField = document.getElementById('quickReportDate');
+            const dateStr = dateField.value || todayStr();
+            if (!dateField.value) dateField.value = dateStr;
+            const body = document.getElementById('quickReportBody');
+            document.getElementById('quickReportWrap').style.display = 'block';
+            document.getElementById('quickReportDateLabel').textContent = formatLocalizedDateTitle(dateStr);
+            body.innerHTML = `<div class="empty-state-note">กำลังรวบรวมข้อมูล...</div>`;
+
+            const dayAttendance = (attendanceRecords || []).filter(r => r.checkin_date === dateStr);
+            const lateCount = dayAttendance.filter(r => r.status === 'Late').length;
+
+            let pdRecord = null;
+            try { pdRecord = await sbSelectPdPhoto(dateStr); } catch (e) {}
+
+            let qrRecord = null;
+            try { qrRecord = await sbSelectQrUsageDaily(dateStr); } catch (e) {}
+            const qrRows = (qrRecord && qrRecord.rows_json) ? qrRecord.rows_json : [];
+            const qrWithVal = qrRows.filter(r => r.qrUsagePct != null);
+            const qrAvg = qrWithVal.length ? (qrWithVal.reduce((a, r) => a + r.qrUsagePct, 0) / qrWithVal.length) : null;
+
+            let bkRecord = null;
+            try { bkRecord = await sbSelectBookingSummaryDaily(dateStr); } catch (e) {}
+            const bkTotals = (bkRecord && bkRecord.totals_json) ? bkRecord.totals_json : null;
+
+            let missedRows = [];
+            try { missedRows = await sbSelectMissedCase(dateStr); } catch (e) {}
+            const missedTotal = (missedRows || []).reduce((a, r) => a + (r.case_count || 0), 0);
+
+            body.innerHTML = `
+                <div class="quick-report-grid">
+                    <div class="quick-report-block">
+                        <div class="quick-report-block-title"><i class="fa-solid fa-user-check"></i> เข้างาน</div>
+                        <div class="quick-report-block-value">${dayAttendance.length} <span style="font-size:12px;font-weight:400;">คน</span></div>
+                        <div class="quick-report-block-sub">มาสาย ${lateCount} คน</div>
+                    </div>
+                    <div class="quick-report-block">
+                        <div class="quick-report-block-title"><i class="fa-solid fa-camera-retro"></i> PD ประจำวัน</div>
+                        <div class="quick-report-block-value" style="font-size:15px;">${pdRecord ? (pdRecord.captured_time + ' · ' + (pdRecord.status || '-')) : 'ยังไม่ถ่าย'}</div>
+                    </div>
+                    <div class="quick-report-block">
+                        <div class="quick-report-block-title"><i class="fa-solid fa-qrcode"></i> QR Payment เฉลี่ย</div>
+                        <div class="quick-report-block-value">${qrAvg != null ? qrAvg.toFixed(2) + '%' : 'ไม่มีข้อมูล'}</div>
+                        <div class="quick-report-block-sub">${qrWithVal.length}/${qrRows.length} คนมีข้อมูล</div>
+                    </div>
+                    <div class="quick-report-block">
+                        <div class="quick-report-block-title"><i class="fa-solid fa-clipboard-list"></i> การรับงาน (Booking)</div>
+                        <div class="quick-report-block-value">${bkTotals ? bkTotals.booking : '-'}</div>
+                        <div class="quick-report-block-sub">${bkTotals ? `Success Booking ${bkTotals.successBooking} · Late ${bkTotals.late}` : 'ยังไม่วิเคราะห์'}</div>
+                    </div>
+                    <div class="quick-report-block" style="border-left-color:var(--dhl-red); grid-column: 1 / -1;">
+                        <div class="quick-report-block-title"><i class="fa-solid fa-triangle-exclamation"></i> เคส Del ไม่ได้รับ</div>
+                        <div class="quick-report-block-value" style="color:var(--dhl-red);">${missedTotal} <span style="font-size:12px;font-weight:400;">เคส</span></div>
+                        <div class="quick-report-block-sub">${(missedRows || []).length} คนมีเคส${(missedRows && missedRows.length) ? ' — ' + missedRows.map(r => `${r.courier_name} (${r.case_count})`).join(', ') : ''}</div>
+                    </div>
+                </div>
+            `;
+            triggerToast('สร้างสรุป Report แล้ว', 'success');
+        }
+
+        async function exportQuickReportImage() {
+            if (!window.html2canvas) { triggerToast(t("toast_export_tool_load_fail"), "danger"); return; }
+            const target = document.getElementById('quickReportCard');
+            if (!target) return;
+            triggerToast(t("toast_generating_report_image"), "success");
+            try {
+                const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2 });
+                const link = document.createElement('a');
+                const dateVal = document.getElementById('quickReportDate').value || todayStr();
+                link.download = `dhl_daily_report_${dateVal}.png`;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            } catch (err) {
+                console.error(err);
+                triggerToast(t("toast_export_image_fail"), "danger");
+            }
         }
 
 
