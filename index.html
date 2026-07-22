@@ -2249,7 +2249,7 @@
 
                     <div class="input-group">
 
-                        <label>รูปภาพตาราง PD (เลือกได้หลายรูป)</label>
+                        <label>รูปภาพ QR Payment (เลือกได้หลายรูป)</label>
 
                         <input type="file" id="qrImageInput" accept="image/*" multiple style="display:none;" onchange="handleQrImageSelect(event)">
 
@@ -10155,10 +10155,7 @@
             const dateStr = dateField.value || todayStr();
             box.innerHTML = `<div class="empty-state-note">${t('loading_latest')}</div>`;
 
-            let groupOpsRows = [];
-            try { groupOpsRows = await sbSelectGroupOps(dateStr); }
-            catch (err) { console.warn("sbSelectGroupOps error (create table group_ops_daily to persist):", err); }
-            const edtGroupStats = await computeGroupEdtStatsForDate(dateStr);
+            const employeeStats = await computeEmployeeStatsForDate(dateStr);
 
             let missedRows = [];
             try { missedRows = await sbSelectMissedCase(dateStr); }
@@ -10169,12 +10166,14 @@
                 const meta = GROUP_META[gk];
                 const groupCouriers = COURIER_LIST.filter(c => c.group === gk);
                 const courierCount = groupCouriers.length;
-                const savedRow = groupOpsRows.find(r => r.group_key === gk) || {};
-                const edtStat = edtGroupStats[gk];
-                const edtPctText = (edtStat && edtStat.total > 0) ? (edtStat.edtSum / edtStat.total * 100).toFixed(1) + '%' : 'ไม่มีข้อมูล';
-                const qrTotalVal = savedRow.qr_total_count;
-                const qrUsedVal = savedRow.qr_used_count;
-                const qrPctText = (qrTotalVal != null && qrTotalVal > 0) ? ((qrUsedVal || 0) / qrTotalVal * 100).toFixed(1) + '%' : 'ไม่มีข้อมูล';
+                const statList = employeeStats[gk] || [];
+
+                const edtVals = statList.filter(s => s.edtPct != null).map(s => s.edtPct);
+                const qrVals = statList.filter(s => s.qrPct != null).map(s => s.qrPct);
+                const otVals = statList.filter(s => s.ontimePct != null).map(s => s.ontimePct);
+                const avg = arr => arr.length ? (arr.reduce((a, v) => a + v, 0) / arr.length) : null;
+                const edtAvg = avg(edtVals), qrAvg = avg(qrVals), otAvg = avg(otVals);
+                const pctBadge = v => v == null ? 'ไม่มีข้อมูล' : v.toFixed(1) + '%';
 
                 const groupMissedRows = (missedRows || []).filter(r => matchMissedCaseNameToGroup(r.courier_name) === gk);
                 const groupMissedTotal = groupMissedRows.reduce((a, r) => a + (r.case_count || 0), 0);
@@ -10189,6 +10188,20 @@
 
                 const datalistId = `missedGroupOptions_${gk}`;
 
+                const employeeRowsHtml = groupCouriers.length
+                    ? groupCouriers.map(c => {
+                        const s = statList.find(x => x.courierId === c.id) || {};
+                        const cellCls = v => v == null ? '' : (v >= 30 ? 'edt-pct-ok' : 'edt-pct-warn');
+                        return `
+                        <tr>
+                            <td style="text-align:left; padding:5px 6px; font-size:11px;">${c.name ? c.name : c.id}</td>
+                            <td class="edt-pct-cell ${cellCls(s.edtPct)}" style="padding:5px 6px; font-size:11px;">${s.edtPct != null ? s.edtPct.toFixed(1) + '%' : '-'}</td>
+                            <td class="edt-pct-cell ${cellCls(s.qrPct)}" style="padding:5px 6px; font-size:11px;">${s.qrPct != null ? s.qrPct.toFixed(1) + '%' : '-'}</td>
+                            <td class="edt-pct-cell ${cellCls(s.ontimePct)}" style="padding:5px 6px; font-size:11px;">${s.ontimePct != null ? s.ontimePct.toFixed(1) + '%' : '-'}</td>
+                        </tr>`;
+                    }).join('')
+                    : `<tr><td colspan="4" style="text-align:center; padding:8px; font-size:11px; color:var(--dhl-grey);">ไม่มีพนักงานในกลุ่มนี้</td></tr>`;
+
                 const card = document.createElement('div');
                 card.className = 'leave-card';
                 card.style.borderLeftColor = meta.color;
@@ -10200,10 +10213,23 @@
                             <div class="leave-card-meta">พนักงานในกลุ่ม ${courierCount} คน</div>
                         </div>
                         <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
-                            <span class="status-badge" style="background:#fff;color:${meta.color};border:1px solid ${meta.border};">EDT ${edtPctText}</span>
-                            <span class="status-badge" style="background:#fff;color:#0891b2;border:1px solid #a5f3fc;">QR ${qrPctText}</span>
+                            <span class="status-badge" style="background:#fff;color:${meta.color};border:1px solid ${meta.border};">EDT ${pctBadge(edtAvg)}</span>
+                            <span class="status-badge" style="background:#fff;color:#0891b2;border:1px solid #a5f3fc;">QR ${pctBadge(qrAvg)}</span>
+                            <span class="status-badge" style="background:#fff;color:#059669;border:1px solid #a7f3d0;">Ontime ${pctBadge(otAvg)}</span>
                         </div>
                     </div>
+                    <div style="margin-top:10px; background:#fff; border:1px solid ${meta.border}; border-radius:8px; overflow-x:auto;">
+                        <table class="edt-table" style="width:100%; min-width:320px;">
+                            <thead><tr>
+                                <th style="text-align:left; padding:6px; font-size:10.5px;">พนักงาน</th>
+                                <th style="padding:6px; font-size:10.5px;">EDT %</th>
+                                <th style="padding:6px; font-size:10.5px;">QR %</th>
+                                <th style="padding:6px; font-size:10.5px;">Ontime %</th>
+                            </tr></thead>
+                            <tbody>${employeeRowsHtml}</tbody>
+                        </table>
+                    </div>
+                    <div class="report-note" style="margin-top:6px; margin-bottom:0;">ดึงจากผลวิเคราะห์ล่าสุดของวันนี้ในแท็บ "สรุป EDT" (การ์ด EDT / QR Payment / การรับงาน) — ถ้ายังไม่เคยวิเคราะห์ จะแสดง "-"</div>
                     <div class="input-group" style="margin-bottom:0; margin-top:10px;">
                         <label style="font-size:10.5px; display:flex; justify-content:space-between;"><span>เคสเดลไม่ได้รับ</span><span style="color:var(--dhl-red); font-weight:800;">รวม ${groupMissedTotal} เคส</span></label>
                         <div style="display:flex; gap:6px; align-items:flex-end;">
@@ -10216,18 +10242,66 @@
                         </div>
                         <div id="missedList_${gk}">${missedListHtml}</div>
                     </div>
-                    <div class="input-group" style="margin-bottom:0; margin-top:10px;">
-                        <label style="font-size:10.5px;">QR Payment ใช้แล้ว / ทั้งหมด</label>
-                        <div style="display:flex; gap:4px; align-items:center;">
-                            <input type="number" min="0" class="form-input" id="qrUsed_${gk}" value="${qrUsedVal != null ? qrUsedVal : ''}" placeholder="ใช้แล้ว" style="text-align:center;">
-                            <span style="font-size:11px; color:var(--dhl-grey);">/</span>
-                            <input type="number" min="0" class="form-input" id="qrTotal_${gk}" value="${qrTotalVal != null ? qrTotalVal : ''}" placeholder="ทั้งหมด" style="text-align:center;">
-                        </div>
-                    </div>
-                    <button type="button" class="btn-secondary-yellow" style="width:100%; margin-top:8px;" onclick="saveGroupOpsData('${gk}')"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลกลุ่มนี้</button>
                 `;
                 box.appendChild(card);
             });
+        }
+
+        // Matches a "username"-style identifier (e.g. "bpet16_lmpth", from EDT/QR/Booking
+        // AI-extracted tables) back to a courier in COURIER_LIST, so its group + display
+        // name can be looked up. Reused by matchEdtUsernameToCourierGroup for group lookups.
+        function matchUsernameToCourier(username) {
+            const u = (username || '').toUpperCase();
+            const candidate = u.split(/[_\s]/)[0];
+            let courier = COURIER_LIST.find(c => c.id.toUpperCase() === candidate);
+            if (!courier) courier = COURIER_LIST.find(c => u.startsWith(c.id.toUpperCase()));
+            return courier || null;
+        }
+
+        // Combines the latest EDT summary, QR Payment usage, and Booking (Ontime%) results
+        // for a given date into one per-employee breakdown, grouped by supervisor color group.
+        async function computeEmployeeStatsForDate(dateStr) {
+            const byGroup = {};
+            GROUP_KEYS.forEach(gk => { byGroup[gk] = {}; });
+
+            function ensure(gk, courierId) {
+                if (!byGroup[gk][courierId]) byGroup[gk][courierId] = { courierId, edtPct: null, qrPct: null, ontimePct: null };
+                return byGroup[gk][courierId];
+            }
+
+            let edtRecord = null;
+            try { edtRecord = await sbSelectEdtDailySummary(dateStr); }
+            catch (err) { console.warn("computeEmployeeStatsForDate: create table edt_daily_summary to enable this", err); }
+            if (edtRecord && edtRecord.rows_json) {
+                edtRecord.rows_json.forEach(r => {
+                    const courier = matchUsernameToCourier(r.username);
+                    if (courier && courier.group && byGroup[courier.group]) ensure(courier.group, courier.id).edtPct = r.edtPct;
+                });
+            }
+
+            let qrRecord = null;
+            try { qrRecord = await sbSelectQrUsageDaily(dateStr); }
+            catch (err) { console.warn("computeEmployeeStatsForDate: create table qr_usage_daily to enable this", err); }
+            if (qrRecord && qrRecord.rows_json) {
+                qrRecord.rows_json.forEach(r => {
+                    const courier = matchUsernameToCourier(r.username);
+                    if (courier && courier.group && byGroup[courier.group]) ensure(courier.group, courier.id).qrPct = r.qrUsagePct;
+                });
+            }
+
+            let bkRecord = null;
+            try { bkRecord = await sbSelectBookingSummaryDaily(dateStr); }
+            catch (err) { console.warn("computeEmployeeStatsForDate: create table booking_summary_daily to enable this", err); }
+            if (bkRecord && bkRecord.rows_json) {
+                bkRecord.rows_json.forEach(r => {
+                    const courier = matchUsernameToCourier(r.username);
+                    if (courier && courier.group && byGroup[courier.group]) ensure(courier.group, courier.id).ontimePct = r.ontimePct;
+                });
+            }
+
+            const result = {};
+            GROUP_KEYS.forEach(gk => { result[gk] = Object.values(byGroup[gk]); });
+            return result;
         }
 
         // Match a missed-case courier_name entry (e.g. "BPET16 - Raphiphat Khamsuk"
@@ -10267,25 +10341,6 @@
             } catch (err) {
                 console.error(err);
                 triggerToast('ลบไม่สำเร็จ กรุณาลองใหม่', 'danger');
-            }
-        }
-
-        async function saveGroupOpsData(groupKey) {
-            const dateStr = document.getElementById('supervisorSummaryDate').value || todayStr();
-            const qrUsedVal = parseInt(document.getElementById(`qrUsed_${groupKey}`).value);
-            const qrTotalVal = parseInt(document.getElementById(`qrTotal_${groupKey}`).value);
-            try {
-                await sbUpsertGroupOps({
-                    ops_date: dateStr,
-                    group_key: groupKey,
-                    qr_used_count: isNaN(qrUsedVal) ? null : qrUsedVal,
-                    qr_total_count: isNaN(qrTotalVal) ? null : qrTotalVal
-                });
-                triggerToast("บันทึกข้อมูลกลุ่มเรียบร้อยแล้ว", "success");
-                renderSupervisorSummary();
-            } catch (err) {
-                console.error(err);
-                triggerToast("บันทึกไม่สำเร็จ กรุณาสร้างตาราง group_ops_daily ก่อน", "danger");
             }
         }
 
