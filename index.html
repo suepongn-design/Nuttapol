@@ -10663,14 +10663,14 @@
                         <div class="supervisorReportGroupScroll" style="background:${meta.bg};">
                             <table class="edt-table" style="width:100%; table-layout:fixed; border-collapse:collapse;">
                                 <colgroup>
-                                    <col style="width:32%;"><col style="width:17%;"><col style="width:17%;"><col style="width:20%;"><col style="width:14%;">
+                                    <col style="width:28%;"><col style="width:15%;"><col style="width:15%;"><col style="width:19%;"><col style="width:23%;">
                                 </colgroup>
                                 <thead><tr style="background:${meta.bg};">
                                     <th style="text-align:left; padding:4px 3px; font-size:8.5px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">พนักงาน</th>
                                     <th style="padding:4px 2px; font-size:8.5px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">EDT%</th>
                                     <th style="padding:4px 2px; font-size:8.5px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">QR%</th>
                                     <th style="padding:4px 2px; font-size:8.5px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">Pickup OT%</th>
-                                    <th style="padding:4px 2px; font-size:8.5px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">เคส</th>
+                                    <th style="padding:4px 2px; font-size:8.5px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">เดลไม่ได้รับ</th>
                                 </tr></thead>
                                 <tbody style="background:#fff;">${rowsHtml}</tbody>
                             </table>
@@ -10722,7 +10722,7 @@
             const dateStr = dateField.value || todayStr();
             triggerToast(t("toast_generating_report_image"), "success");
 
-            const OUT_W = 1180, OUT_H = 2190;
+            const OUT_W = 1080;
             const clone = document.createElement('div');
             clone.style.position = 'fixed';
             clone.style.top = '0';
@@ -10757,18 +10757,25 @@
                 });
 
                 // The report's height varies with how many employees/groups are
-                // shown, so composite the capture onto a fixed 1180x2190 canvas
-                // (scaled to fit, centered, white background) — the output PNG is
-                // always exactly this size regardless of content length.
+                // shown. Default the output to 1080x890, but if the actual
+                // content (at 1080px wide) is taller than 890px, grow the
+                // canvas to fit it instead of shrinking/cropping the table —
+                // this keeps every row and column fully readable.
+                const DEFAULT_OUT_H = 890;
+                const rawW = rawCanvas.width / 2;   // rawCanvas was captured at scale:2
+                const rawH = rawCanvas.height / 2;
+                const contentH = Math.round(rawW ? (OUT_W / rawW) * rawH : DEFAULT_OUT_H);
+                const OUT_H = Math.max(DEFAULT_OUT_H, contentH);
+
                 const outCanvas = document.createElement('canvas');
                 outCanvas.width = OUT_W;
                 outCanvas.height = OUT_H;
                 const ctx = outCanvas.getContext('2d');
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, OUT_W, OUT_H);
-                const fitScale = Math.min(OUT_W / (rawCanvas.width / 2), OUT_H / (rawCanvas.height / 2));
-                const drawW = (rawCanvas.width / 2) * fitScale;
-                const drawH = (rawCanvas.height / 2) * fitScale;
+                const fitScale = Math.min(OUT_W / rawW, OUT_H / rawH);
+                const drawW = rawW * fitScale;
+                const drawH = rawH * fitScale;
                 const offsetX = (OUT_W - drawW) / 2;
                 const offsetY = (OUT_H - drawH) / 2;
                 ctx.drawImage(rawCanvas, 0, 0, rawCanvas.width, rawCanvas.height, offsetX, offsetY, drawW, drawH);
