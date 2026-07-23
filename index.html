@@ -2027,14 +2027,17 @@
 
                     <div class="rules-card" style="border-top-color:#0891b2; margin-bottom:12px;">
                         <div style="font-size:11px; color:#4a5568; line-height:1.7;">
-                            <b>กู้คืน/นำเข้าข้อมูลจากไฟล์ Backup (.json)</b><br>
-                            รองรับไฟล์สำรอง เช่น "BPE_attendance_backup_YYYY-MM-DD.json" ที่มีโครงสร้าง <code>{ settings, couriers, checkins, pph }</code> — ระบบจะนำเข้ารายชื่อคนขับ, ประวัติเช็คอิน และข้อมูล PPH รายวันเข้าสู่ฐานข้อมูลให้อัตโนมัติ (ไม่ลบข้อมูลเดิม เพิ่ม/อัปเดตทับเฉพาะรายการที่ตรงกัน)
+                            <b>สำรอง/กู้คืนข้อมูลด้วยไฟล์ Backup (.json)</b><br>
+                            "ส่งออก" จะดึงข้อมูลคนขับ, ประวัติเช็คอินทั้งหมด และ PPH รายวันทั้งหมดจากฐานข้อมูลปัจจุบัน มาเป็นไฟล์ <code>{ settings, couriers, checkins, pph }</code> เดียว ใช้เก็บสำรองหรือย้ายไปโปรเจกต์อื่นได้ ส่วน "นำเข้า" รองรับไฟล์รูปแบบเดียวกัน เช่น "BPE_attendance_backup_YYYY-MM-DD.json" — ระบบจะเพิ่ม/อัปเดตทับเฉพาะรายการที่ตรงกัน ไม่ลบข้อมูลเดิม
                         </div>
                     </div>
                     <div class="input-group">
                         <label>ไฟล์ Backup (.json)</label>
                         <input type="file" id="backupJsonInput" accept="application/json,.json" style="display:none;" onchange="handleBackupJsonImport(event)">
                         <div style="display:flex; gap:8px;">
+                            <button type="button" class="ghost-btn" style="flex:1;" onclick="exportBackupJson()">
+                                <i class="fa-solid fa-file-export"></i> <span>ส่งออกข้อมูลเป็น JSON</span>
+                            </button>
                             <button type="button" class="ghost-btn" style="flex:1;" onclick="document.getElementById('backupJsonInput').click()">
                                 <i class="fa-solid fa-file-import"></i> <span>เลือกไฟล์ JSON เพื่อนำเข้าข้อมูล</span>
                             </button>
@@ -6356,6 +6359,130 @@
 
         }
 
+        // ===================== BACKUP JSON EXPORT =====================
+        // Builds a backup file shaped exactly like the legacy backup format this
+        // depot already uses (confirmed against a real BPE_attendance_backup_*.json
+        // sample): { settings, couriers, checkins, pph } with epoch-millisecond
+        // timestamps and the full field set below — not just the minimal subset
+        // that BACKUP JSON IMPORT actually reads back in.
+        async function exportBackupJson() {
+            const staffName = (prompt('ชื่อผู้บันทึก (staff) สำหรับไฟล์ Backup นี้:', 'BPE') || 'BPE').trim();
+            triggerToast('กำลังเตรียมไฟล์ Backup JSON...', 'success');
+            try {
+                if (!dbCourierRecords || !dbCourierRecords.length) await loadCourierData();
+                if (!attendanceRecords) await fetchAttendanceData();
+
+                let pphRows = [];
+                try {
+                    const res = await fetchWithTimeout(`${SB_URL}/rest/v1/pph_daily?select=*&order=pph_date.asc`, { method: "GET", headers: SB_HEADERS });
+                    if (res.ok) pphRows = await res.json();
+                } catch (err) { console.warn('exportBackupJson: pph fetch failed', err); }
+
+                let pdRows = [];
+                try {
+                    const res = await fetchWithTimeout(`${SB_URL}/rest/v1/pd_photos?select=pd_date,captured_time`, { method: "GET", headers: SB_HEADERS });
+                    if (res.ok) pdRows = await res.json();
+                } catch (err) { console.warn('exportBackupJson: pd fetch failed', err); }
+                const pdByDate = {};
+                pdRows.forEach(r => { if (r.pd_date) pdByDate[r.pd_date] = r; });
+
+                // checkins/pph reference couriers by a local numeric id, not the BPE
+                // code — build that mapping here, matching handleBackupJsonImport.
+                const codeToLocalId = {};
+                const couriersOut = (dbCourierRecords || []).map((c, idx) => {
+                    const localId = idx + 1;
+                    const code = (c.courier_id || '').toUpperCase();
+                    codeToLocalId[code] = localId;
+                    return {
+                        id: localId,
+                        code: code,
+                        name: c.name || '',
+                        vendor: c.vendor || '',
+                        type: c.vehicle_type || '',
+                        active: true
+                    };
+                });
+
+                const checkinsOut = (attendanceRecords || []).map(r => {
+                    const code = (r.courier_id || '').toUpperCase();
+                    const localId = codeToLocalId[code] != null ? codeToLocalId[code] : null;
+                    const tsMs = (r.checkin_date && r.checkin_time) ? new Date(`${r.checkin_date}T${r.checkin_time}`).getTime() : null;
+                    return {
+                        courierId: localId,
+                        date: r.checkin_date,
+                        ts: tsMs,
+                        status: r.status === 'Late' ? 'late' : 'ontime',
+                        buffer: false,       // not tracked by attendance_checkins — always false
+                        uniform: r.uniform_ok !== false,
+                        manualEdit: false,   // not tracked by attendance_checkins — always false
+                        staff: staffName,
+                        id: r.id
+                    };
+                });
+
+                // route_log values written by the live app today are "HH:MM:SS" time
+                // strings keyed by courier CODE; a row that itself came from an
+                // older-format import may instead still hold raw epoch-ms numbers
+                // keyed by local id — handle both so export never throws on either.
+                const routeTimeToEpoch = (dateStr, v) => {
+                    if (v == null) return null;
+                    if (typeof v === 'number') return v;
+                    const d = new Date(`${dateStr}T${v}`);
+                    return isNaN(d.getTime()) ? null : d.getTime();
+                };
+
+                const pphOut = (pphRows || []).map(p => {
+                    const routeLog = p.route_log || {};
+                    const fsEpochs = Object.values(routeLog)
+                        .map(v => v && routeTimeToEpoch(p.pph_date, v.fs))
+                        .filter(v => v != null);
+                    const firstScanTs = fsEpochs.length ? Math.min(...fsEpochs) : null;
+                    const inboundTs = p.inbound_time ? new Date(`${p.pph_date}T${p.inbound_time}`).getTime() : null;
+                    const lastInboundTs = p.updated_at ? new Date(p.updated_at).getTime() : null;
+                    const pdRow = pdByDate[p.pph_date];
+                    const pdTs = pdRow && pdRow.captured_time ? new Date(`${p.pph_date}T${pdRow.captured_time}`).getTime() : null;
+                    const out = {
+                        date: p.pph_date,
+                        staffN: p.staff_count || 0,
+                        sorterN: p.sorter_count || 0,
+                        courierN: Object.keys(routeLog).length,
+                        pNew: p.new_parcels || 0,
+                        pOld: p.old_parcels || 0,
+                        inboundTs: inboundTs,
+                        lastInboundTs: lastInboundTs,
+                        firstScanTs: firstScanTs,
+                        rp: routeLog
+                    };
+                    if (pdTs != null) out.pd = { ts: pdTs };
+                    return out;
+                });
+
+                const backup = {
+                    settings: { depot: 'BPE', staff: staffName },
+                    couriers: couriersOut,
+                    checkins: checkinsOut,
+                    pph: pphOut
+                };
+
+                const jsonStr = JSON.stringify(backup, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `BPE_attendance_backup_${todayStr()}.json`;
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                const statusEl = document.getElementById('backupJsonStatus');
+                const summary = `ส่งออกสำเร็จ: คนขับ ${couriersOut.length} คน • เช็คอิน ${checkinsOut.length} รายการ • PPH ${pphOut.length} วัน`;
+                if (statusEl) statusEl.textContent = summary;
+                triggerToast(summary, 'success');
+            } catch (err) {
+                console.error(err);
+                triggerToast('ส่งออก JSON ไม่สำเร็จ กรุณาลองใหม่', 'danger');
+            }
+        }
+
         // ===================== BACKUP JSON IMPORT =====================
         // Accepts a local backup file shaped like:
         // { settings: {depot, staff}, couriers: [{id, code, name, vendor, type, active}],
@@ -10529,25 +10656,28 @@
                     const rowStyle = isFlagged ? 'background:#fee2e2; color:#991b1b; font-weight:700;' : '';
                     return `
                         <tr style="${rowStyle}">
-                            <td style="text-align:left; padding:5px 6px; font-size:10.5px;">${c.name || c.id}</td>
-                            <td style="padding:5px 6px; font-size:10.5px; text-align:center;">${s.edtPct != null ? s.edtPct.toFixed(1) + '%' : '-'}</td>
-                            <td style="padding:5px 6px; font-size:10.5px; text-align:center;">${s.qrPct != null ? s.qrPct.toFixed(1) + '%' : '-'}</td>
-                            <td style="padding:5px 6px; font-size:10.5px; text-align:center;">${s.ontimePct != null ? s.ontimePct.toFixed(1) + '%' : '-'}</td>
-                            <td style="padding:5px 6px; font-size:10.5px; text-align:center;">${missedCount > 0 ? missedCount : '-'}</td>
+                            <td style="text-align:left; padding:4px 3px; font-size:9.5px; word-break:break-word;">${c.name || c.id}</td>
+                            <td style="padding:4px 2px; font-size:9.5px; text-align:center;">${s.edtPct != null ? s.edtPct.toFixed(1) + '%' : '-'}</td>
+                            <td style="padding:4px 2px; font-size:9.5px; text-align:center;">${s.qrPct != null ? s.qrPct.toFixed(1) + '%' : '-'}</td>
+                            <td style="padding:4px 2px; font-size:9.5px; text-align:center;">${s.ontimePct != null ? s.ontimePct.toFixed(1) + '%' : '-'}</td>
+                            <td style="padding:4px 2px; font-size:9.5px; text-align:center;">${missedCount > 0 ? missedCount : '-'}</td>
                         </tr>`;
                 }).join('') : `<tr><td colspan="5" style="text-align:center; padding:8px; font-size:11px; color:var(--dhl-grey);">ไม่มีพนักงานในกลุ่มนี้</td></tr>`;
 
                 groupsHtml += `
                     <div style="margin-bottom:18px; border:1.5px solid ${meta.border}; border-radius:10px; overflow:hidden;">
                         <div style="font-weight:800; font-size:12.5px; color:#fff; background:${meta.color}; padding:8px 10px;">${meta.emoji} ${meta.label} · ผู้ดูแล ${meta.supervisor}</div>
-                        <div class="supervisorReportGroupScroll" style="overflow-x:auto; background:${meta.bg};">
-                            <table class="edt-table" style="width:100%; min-width:480px;">
+                        <div class="supervisorReportGroupScroll" style="background:${meta.bg};">
+                            <table class="edt-table" style="width:100%; table-layout:fixed; border-collapse:collapse;">
+                                <colgroup>
+                                    <col style="width:32%;"><col style="width:17%;"><col style="width:17%;"><col style="width:20%;"><col style="width:14%;">
+                                </colgroup>
                                 <thead><tr style="background:${meta.bg};">
-                                    <th style="text-align:left; padding:6px; font-size:10px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">พนักงาน</th>
-                                    <th style="padding:6px; font-size:10px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">EDT %</th>
-                                    <th style="padding:6px; font-size:10px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">QR %</th>
-                                    <th style="padding:6px; font-size:10px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">Pickup Ontime %</th>
-                                    <th style="padding:6px; font-size:10px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">เคสไม่ได้รับ</th>
+                                    <th style="text-align:left; padding:4px 3px; font-size:8.5px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">พนักงาน</th>
+                                    <th style="padding:4px 2px; font-size:8.5px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">EDT%</th>
+                                    <th style="padding:4px 2px; font-size:8.5px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">QR%</th>
+                                    <th style="padding:4px 2px; font-size:8.5px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">Pickup OT%</th>
+                                    <th style="padding:4px 2px; font-size:8.5px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">เคส</th>
                                 </tr></thead>
                                 <tbody style="background:#fff;">${rowsHtml}</tbody>
                             </table>
@@ -10619,15 +10749,35 @@
             target.style.maxWidth = 'none';
 
             try {
-                const canvas = await html2canvas(target, {
+                const rawCanvas = await html2canvas(target, {
                     backgroundColor: '#ffffff',
                     scale: 2,
                     windowWidth: Math.max(document.documentElement.scrollWidth, maxFullWidth + 100)
                 });
+
+                // The report's height varies with how many employees/groups are
+                // shown, so instead of exporting at whatever size html2canvas
+                // produced, composite it onto a fixed 1180x2190 canvas (scaled to
+                // fit, centered, white background) — the output PNG is always
+                // exactly this size regardless of content length.
+                const OUT_W = 1180, OUT_H = 2190;
+                const outCanvas = document.createElement('canvas');
+                outCanvas.width = OUT_W;
+                outCanvas.height = OUT_H;
+                const ctx = outCanvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, OUT_W, OUT_H);
+                const fitScale = Math.min(OUT_W / rawCanvas.width, OUT_H / rawCanvas.height);
+                const drawW = rawCanvas.width * fitScale;
+                const drawH = rawCanvas.height * fitScale;
+                const offsetX = (OUT_W - drawW) / 2;
+                const offsetY = (OUT_H - drawH) / 2;
+                ctx.drawImage(rawCanvas, 0, 0, rawCanvas.width, rawCanvas.height, offsetX, offsetY, drawW, drawH);
+
                 const link = document.createElement('a');
                 const dateVal = document.getElementById('supervisorSummaryDate').value || todayStr();
                 link.download = `dhl_supervisor_report_${dateVal}.png`;
-                link.href = canvas.toDataURL('image/png');
+                link.href = outCanvas.toDataURL('image/png');
                 document.body.appendChild(link); link.click(); document.body.removeChild(link);
             } catch (err) {
                 console.error(err);
