@@ -10624,20 +10624,13 @@
 
         // ===================== SUPERVISOR GROUP REPORT (all 3 groups, 1 page, red highlight) =====================
         // Highlights an employee row red when: has a missed-delivery case, OR EDT% < 100, OR QR% < 30
-        async function generateSupervisorReport() {
-            const dateField = document.getElementById('supervisorSummaryDate');
-            const dateStr = dateField.value || todayStr();
-            if (!dateField.value) dateField.value = dateStr;
-            const wrap = document.getElementById('supervisorReportWrap');
-            const body = document.getElementById('supervisorReportBody');
-            wrap.style.display = 'block';
-            document.getElementById('supervisorReportDateLabel').textContent = formatLocalizedDateTitle(dateStr);
-            body.innerHTML = `<div class="empty-state-note">กำลังรวบรวมข้อมูล...</div>`;
-
+        // Builds the "3 groups" report table HTML (shared by the on-screen render
+        // and the export-to-image path, so both always show the exact same data).
+        async function buildSupervisorReportGroupsHtml(dateStr) {
             const employeeStats = await computeEmployeeStatsForDate(dateStr);
             let missedRows = [];
             try { missedRows = await sbSelectMissedCase(dateStr); }
-            catch (err) { console.warn("generateSupervisorReport: sbSelectMissedCase error", err); }
+            catch (err) { console.warn("buildSupervisorReportGroupsHtml: sbSelectMissedCase error", err); }
 
             let groupsHtml = '';
             GROUP_KEYS.forEach(gk => {
@@ -10684,6 +10677,20 @@
                         </div>
                     </div>`;
             });
+            return groupsHtml;
+        }
+
+        async function generateSupervisorReport() {
+            const dateField = document.getElementById('supervisorSummaryDate');
+            const dateStr = dateField.value || todayStr();
+            if (!dateField.value) dateField.value = dateStr;
+            const wrap = document.getElementById('supervisorReportWrap');
+            const body = document.getElementById('supervisorReportBody');
+            wrap.style.display = 'block';
+            document.getElementById('supervisorReportDateLabel').textContent = formatLocalizedDateTitle(dateStr);
+            body.innerHTML = `<div class="empty-state-note">กำลังรวบรวมข้อมูล...</div>`;
+
+            const groupsHtml = await buildSupervisorReportGroupsHtml(dateStr);
 
             body.innerHTML = `
                 <div id="supervisorReportLegend" style="margin-bottom:12px;">
@@ -10705,89 +10712,76 @@
             el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none';
         }
 
+        // Renders the report into an OFFSCREEN clone fixed at exactly 1180px wide
+        // (well clear of any mobile-narrow layout, scroll wrappers, or live-DOM
+        // resize timing quirks that previously caused columns to be cropped) and
+        // captures that instead of the visible on-screen card.
         async function exportSupervisorReportImage() {
             if (!window.html2canvas) { triggerToast(t("toast_export_tool_load_fail"), "danger"); return; }
-            const target = document.getElementById('supervisorReportCard');
-            const bodyEl = document.getElementById('supervisorReportBody');
-            if (!target || !bodyEl) return;
+            const dateField = document.getElementById('supervisorSummaryDate');
+            const dateStr = dateField.value || todayStr();
             triggerToast(t("toast_generating_report_image"), "success");
 
-            // Hide the legend explainer entirely for the exported image — it's only
-            // meant to be viewed on-screen via the warning icon toggle.
-            const legend = document.getElementById('supervisorReportLegend');
-            const prevLegendDisplay = legend ? legend.style.display : null;
-            if (legend) legend.style.display = 'none';
-
-            // Each group table scrolls horizontally on narrow screens, so html2canvas
-            // would otherwise only capture whichever slice was scrolled into view.
-            // Temporarily expand every group's scroll wrapper to its full natural
-            // width so every column is always included, then restore afterward.
-            const scrollers = Array.from(target.querySelectorAll('.supervisorReportGroupScroll'));
-            const prevStates = scrollers.map(el => {
-                const tbl = el.querySelector('table');
-                const fullWidth = tbl ? tbl.scrollWidth : el.scrollWidth;
-                const prev = { el, overflowX: el.style.overflowX, width: el.style.width };
-                el.scrollLeft = 0;
-                el.style.overflowX = 'visible';
-                el.style.width = fullWidth + 'px';
-                return prev;
-            });
-            // Measure the report BODY's scroll width (it already includes its own
-            // left/right padding), not just the scrollers, and add a small safety
-            // buffer — otherwise the card was previously sized exactly to the
-            // table content and its own side padding pushed the last column
-            // (e.g. "เคสไม่ได้รับ") past the card edge, cropping it in the export.
-            const maxFullWidth = Math.max(bodyEl.scrollWidth, target.scrollWidth) + 8;
-
-            const prevCardWidth = target.style.width;
-            const prevCardMaxWidth = target.style.maxWidth;
-            const prevCardOverflow = target.style.overflow;
-            // .edt-result-card clips overflow by default; disable that while the
-            // card is temporarily widened so nothing near the right edge is cut.
-            target.style.overflow = 'visible';
-            target.style.width = maxFullWidth + 'px';
-            target.style.maxWidth = 'none';
+            const OUT_W = 1180, OUT_H = 2190;
+            const clone = document.createElement('div');
+            clone.style.position = 'fixed';
+            clone.style.top = '0';
+            clone.style.left = '-99999px';
+            clone.style.width = OUT_W + 'px';
+            clone.style.background = '#ffffff';
+            clone.style.zIndex = '-1';
+            clone.className = 'edt-result-card';
 
             try {
-                const rawCanvas = await html2canvas(target, {
+                const groupsHtml = await buildSupervisorReportGroupsHtml(dateStr);
+                clone.innerHTML = `
+                    <div class="edt-result-header">
+                        <div class="dhl-brand-block" style="font-size:22px;">DHL</div>
+                        <div class="edt-result-title-group">
+                            <div class="edt-result-title">BPE Group Summary Report</div>
+                            <div class="edt-result-subtitle">${formatLocalizedDateTitle(dateStr)}</div>
+                        </div>
+                    </div>
+                    <div style="padding:14px;">${groupsHtml}</div>
+                `;
+                document.body.appendChild(clone);
+
+                // Let the browser lay out the fixed-width clone before capturing.
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+                const rawCanvas = await html2canvas(clone, {
                     backgroundColor: '#ffffff',
                     scale: 2,
-                    windowWidth: Math.max(document.documentElement.scrollWidth, maxFullWidth + 100)
+                    width: OUT_W,
+                    windowWidth: OUT_W
                 });
 
                 // The report's height varies with how many employees/groups are
-                // shown, so instead of exporting at whatever size html2canvas
-                // produced, composite it onto a fixed 1180x2190 canvas (scaled to
-                // fit, centered, white background) — the output PNG is always
-                // exactly this size regardless of content length.
-                const OUT_W = 1180, OUT_H = 2190;
+                // shown, so composite the capture onto a fixed 1180x2190 canvas
+                // (scaled to fit, centered, white background) — the output PNG is
+                // always exactly this size regardless of content length.
                 const outCanvas = document.createElement('canvas');
                 outCanvas.width = OUT_W;
                 outCanvas.height = OUT_H;
                 const ctx = outCanvas.getContext('2d');
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, OUT_W, OUT_H);
-                const fitScale = Math.min(OUT_W / rawCanvas.width, OUT_H / rawCanvas.height);
-                const drawW = rawCanvas.width * fitScale;
-                const drawH = rawCanvas.height * fitScale;
+                const fitScale = Math.min(OUT_W / (rawCanvas.width / 2), OUT_H / (rawCanvas.height / 2));
+                const drawW = (rawCanvas.width / 2) * fitScale;
+                const drawH = (rawCanvas.height / 2) * fitScale;
                 const offsetX = (OUT_W - drawW) / 2;
                 const offsetY = (OUT_H - drawH) / 2;
                 ctx.drawImage(rawCanvas, 0, 0, rawCanvas.width, rawCanvas.height, offsetX, offsetY, drawW, drawH);
 
                 const link = document.createElement('a');
-                const dateVal = document.getElementById('supervisorSummaryDate').value || todayStr();
-                link.download = `dhl_supervisor_report_${dateVal}.png`;
+                link.download = `dhl_supervisor_report_${dateStr}.png`;
                 link.href = outCanvas.toDataURL('image/png');
                 document.body.appendChild(link); link.click(); document.body.removeChild(link);
             } catch (err) {
                 console.error(err);
                 triggerToast(t("toast_export_image_fail"), "danger");
             } finally {
-                if (legend) legend.style.display = prevLegendDisplay || '';
-                prevStates.forEach(p => { p.el.style.overflowX = p.overflowX; p.el.style.width = p.width; });
-                target.style.width = prevCardWidth;
-                target.style.maxWidth = prevCardMaxWidth;
-                target.style.overflow = prevCardOverflow;
+                if (clone.parentNode) clone.parentNode.removeChild(clone);
             }
         }
 
