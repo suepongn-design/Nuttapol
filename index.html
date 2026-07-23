@@ -2025,6 +2025,23 @@
 
 
 
+                    <div class="rules-card" style="border-top-color:#0891b2; margin-bottom:12px;">
+                        <div style="font-size:11px; color:#4a5568; line-height:1.7;">
+                            <b>กู้คืน/นำเข้าข้อมูลจากไฟล์ Backup (.json)</b><br>
+                            รองรับไฟล์สำรอง เช่น "BPE_attendance_backup_YYYY-MM-DD.json" ที่มีโครงสร้าง <code>{ settings, couriers, checkins, pph }</code> — ระบบจะนำเข้ารายชื่อคนขับ, ประวัติเช็คอิน และข้อมูล PPH รายวันเข้าสู่ฐานข้อมูลให้อัตโนมัติ (ไม่ลบข้อมูลเดิม เพิ่ม/อัปเดตทับเฉพาะรายการที่ตรงกัน)
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>ไฟล์ Backup (.json)</label>
+                        <input type="file" id="backupJsonInput" accept="application/json,.json" style="display:none;" onchange="handleBackupJsonImport(event)">
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="ghost-btn" style="flex:1;" onclick="document.getElementById('backupJsonInput').click()">
+                                <i class="fa-solid fa-file-import"></i> <span>เลือกไฟล์ JSON เพื่อนำเข้าข้อมูล</span>
+                            </button>
+                        </div>
+                        <div id="backupJsonStatus" class="checklist-note" style="margin-top:6px;"></div>
+                    </div>
+
                     <form id="courierForm" onsubmit="handleCourierFormSubmit(event)">
 
                         <input type="hidden" id="courierEditDbId" value="">
@@ -6339,6 +6356,138 @@
 
         }
 
+        // ===================== BACKUP JSON IMPORT =====================
+        // Accepts a local backup file shaped like:
+        // { settings: {depot, staff}, couriers: [{id, code, name, vendor, type, active}],
+        //   checkins: [{courierId, date, ts, status, uniform, ...}],
+        //   pph: [{date, staffN, sorterN, courierN, pNew, pOld, inboundTs, firstScanTs, rp}] }
+        // and upserts couriers / attendance check-ins / PPH daily rows into Supabase.
+        async function handleBackupJsonImport(event) {
+            const fileInput = event.target;
+            const file = fileInput.files && fileInput.files[0];
+            fileInput.value = ''; // allow re-selecting the same file again later
+            const statusEl = document.getElementById('backupJsonStatus');
+            if (!file) return;
+
+            const setStatus = (msg) => { if (statusEl) statusEl.textContent = msg; };
+
+            let data;
+            try {
+                const text = await file.text();
+                data = JSON.parse(text);
+            } catch (err) {
+                console.error(err);
+                setStatus('ไม่สามารถอ่านไฟล์ JSON นี้ได้ กรุณาตรวจสอบไฟล์');
+                triggerToast('ไม่สามารถอ่านไฟล์ JSON นี้ได้', 'danger');
+                return;
+            }
+
+            const hasCouriers = Array.isArray(data && data.couriers);
+            const hasCheckins = Array.isArray(data && data.checkins);
+            const hasPph = Array.isArray(data && data.pph);
+            if (!hasCouriers && !hasCheckins && !hasPph) {
+                setStatus('รูปแบบไฟล์ไม่ตรงกับ Backup ที่รองรับ (ต้องมี couriers / checkins / pph อย่างน้อยหนึ่งอย่าง)');
+                triggerToast('รูปแบบไฟล์ Backup ไม่ถูกต้อง', 'danger');
+                return;
+            }
+
+            setStatus('กำลังนำเข้าข้อมูล กรุณารอสักครู่...');
+            triggerToast('กำลังนำเข้าข้อมูลจากไฟล์ Backup...', 'success');
+
+            // The backup references couriers by a local numeric id, not their
+            // BPE code, so build lookup tables to translate checkins/pph entries.
+            const idToCode = {};
+            const codeToBackupCourier = {};
+            (data.couriers || []).forEach(c => {
+                if (!c || !c.code) return;
+                const code = String(c.code).toUpperCase();
+                if (c.id != null) idToCode[c.id] = code;
+                codeToBackupCourier[code] = c;
+            });
+
+            let courierCount = 0, checkinCount = 0, pphCount = 0, errorCount = 0;
+
+            // 1) Couriers
+            if (hasCouriers) {
+                for (const c of data.couriers) {
+                    if (!c || !c.code) continue;
+                    const code = String(c.code).toUpperCase();
+                    try {
+                        const existing = dbCourierRecords.find(r => (r.courier_id || '').toUpperCase() === code);
+                        await sbUpsertCourier({
+                            courier_id: code,
+                            name: c.name || '',
+                            vendor: c.vendor || '',
+                            vehicle_type: c.type || '',
+                            group_key: (existing && existing.group_key) || COURIER_GROUP_DEFAULTS[code] || ''
+                        }, existing ? existing.id : null);
+                        courierCount++;
+                    } catch (err) { console.warn('backup import: courier failed', c, err); errorCount++; }
+                }
+                await loadCourierData();
+            }
+
+            // 2) Attendance check-ins
+            if (hasCheckins) {
+                const startTotalMin = WORK_START_HOUR * 60 + WORK_START_MIN;
+                for (const chk of data.checkins) {
+                    const code = chk && idToCode[chk.courierId];
+                    if (!code) continue;
+                    const backupCourier = codeToBackupCourier[code] || {};
+                    try {
+                        const ts = chk.ts ? new Date(chk.ts) : null;
+                        const checkinTime = ts ? ts.toTimeString().slice(0, 8) : '00:00:00';
+                        const isLate = chk.status === 'late';
+                        const nowTotalMin = ts ? (ts.getHours() * 60 + ts.getMinutes()) : 0;
+                        const lateMinutes = isLate ? Math.max(0, nowTotalMin - startTotalMin) : 0;
+                        await sbInsertAttendance({
+                            courier_id: code,
+                            emp_name: backupCourier.name || '',
+                            vendor: backupCourier.vendor || '',
+                            checkin_date: chk.date || todayStr(),
+                            checkin_time: checkinTime,
+                            late_minutes: lateMinutes,
+                            status: isLate ? 'Late' : 'On time',
+                            distance_m: null,
+                            uniform_ok: chk.uniform !== false,
+                            ktb_bag_ok: true,
+                            vehicle_type: backupCourier.type || ''
+                        });
+                        checkinCount++;
+                    } catch (err) { console.warn('backup import: checkin failed', chk, err); errorCount++; }
+                }
+                await fetchAttendanceData();
+            }
+
+            // 3) PPH daily rows
+            if (hasPph) {
+                for (const p of data.pph) {
+                    if (!p || !p.date) continue;
+                    try {
+                        const inboundTime = p.inboundTs ? new Date(p.inboundTs).toTimeString().slice(0, 5) : null;
+                        await sbUpsertPphDaily({
+                            pph_date: p.date,
+                            staff_count: p.staffN || 0,
+                            sorter_count: p.sorterN || 0,
+                            new_parcels: p.pNew || 0,
+                            old_parcels: p.pOld || 0,
+                            inbound_time: inboundTime,
+                            fs_log: [],
+                            route_log: p.rp || {}
+                        });
+                        pphCount++;
+                    } catch (err) { console.warn('backup import: pph failed', p, err); errorCount++; }
+                }
+            }
+
+            renderCourierManagementList();
+            renderAttendanceDashboard();
+
+            const summary = `นำเข้าสำเร็จ: คนขับ ${courierCount} คน • เช็คอิน ${checkinCount} รายการ • PPH ${pphCount} วัน` + (errorCount ? ` (พลาด ${errorCount} รายการ — ตรวจสอบว่าตั้งค่าตาราง couriers / attendance_checkins / pph_daily ใน Supabase แล้ว)` : '');
+            setStatus(summary);
+            triggerToast(summary, errorCount ? 'warning' : 'success');
+        }
+
 
 
         // ===================== SUPERVISOR GROUP DAILY OPS (Supabase table: group_ops_daily) =====================
@@ -10429,7 +10578,8 @@
         async function exportSupervisorReportImage() {
             if (!window.html2canvas) { triggerToast(t("toast_export_tool_load_fail"), "danger"); return; }
             const target = document.getElementById('supervisorReportCard');
-            if (!target) return;
+            const bodyEl = document.getElementById('supervisorReportBody');
+            if (!target || !bodyEl) return;
             triggerToast(t("toast_generating_report_image"), "success");
 
             // Hide the legend explainer entirely for the exported image — it's only
@@ -10452,10 +10602,19 @@
                 el.style.width = fullWidth + 'px';
                 return prev;
             });
-            const maxFullWidth = scrollers.reduce((m, el) => Math.max(m, el.scrollWidth), target.scrollWidth);
+            // Measure the report BODY's scroll width (it already includes its own
+            // left/right padding), not just the scrollers, and add a small safety
+            // buffer — otherwise the card was previously sized exactly to the
+            // table content and its own side padding pushed the last column
+            // (e.g. "เคสไม่ได้รับ") past the card edge, cropping it in the export.
+            const maxFullWidth = Math.max(bodyEl.scrollWidth, target.scrollWidth) + 8;
 
             const prevCardWidth = target.style.width;
             const prevCardMaxWidth = target.style.maxWidth;
+            const prevCardOverflow = target.style.overflow;
+            // .edt-result-card clips overflow by default; disable that while the
+            // card is temporarily widened so nothing near the right edge is cut.
+            target.style.overflow = 'visible';
             target.style.width = maxFullWidth + 'px';
             target.style.maxWidth = 'none';
 
@@ -10478,6 +10637,7 @@
                 prevStates.forEach(p => { p.el.style.overflowX = p.overflowX; p.el.style.width = p.width; });
                 target.style.width = prevCardWidth;
                 target.style.maxWidth = prevCardMaxWidth;
+                target.style.overflow = prevCardOverflow;
             }
         }
 
