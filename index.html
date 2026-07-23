@@ -2422,6 +2422,20 @@
                     </div>
                     <div class="record-list" id="supervisorGroupCards"></div>
                     <div class="report-note">ค่า "เคสเดลไม่ได้รับ" กรอกเป็นรายคนต่อกลุ่ม (เลือกชื่อพนักงานแล้วระบุจำนวนเคส) ระบบจะรวมยอดให้อัตโนมัติ ส่วน "QR Payment" เป็นตัวเลขที่กรอกเองต่อกลุ่ม ระบบจะบันทึกแยกตามวันที่ให้อัตโนมัติ ส่วนค่า EDT % จะดึงจากผลวิเคราะห์ EDT ล่าสุดของวันนั้นในแท็บ "สรุป EDT" — ถ้ายังไม่เคยวิเคราะห์ EDT ของวันที่นี้ จะแสดงว่า "ไม่มีข้อมูล"</div>
+                    <button type="button" class="submit-btn" style="background:var(--dhl-dark); margin-top:10px;" onclick="generateSupervisorReport()"><i class="fa-solid fa-file-invoice"></i> สรุป Report รวม 3 กลุ่ม</button>
+                    <div id="supervisorReportWrap" style="display:none; margin-top:14px;">
+                        <div id="supervisorReportCard" class="edt-result-card">
+                            <div class="edt-result-header">
+                                <div class="dhl-brand-block" style="font-size:22px;">DHL</div>
+                                <div class="edt-result-title-group">
+                                    <div class="edt-result-title">BPE Group Summary Report</div>
+                                    <div class="edt-result-subtitle" id="supervisorReportDateLabel">-</div>
+                                </div>
+                            </div>
+                            <div id="supervisorReportBody" style="padding:14px;"></div>
+                        </div>
+                        <button type="button" class="ghost-btn" style="width:100%; margin-top:10px;" onclick="exportSupervisorReportImage()"><i class="fa-solid fa-image"></i> บันทึกเป็นรูปภาพ</button>
+                    </div>
                 </div>
 
                 <div class="admin-card" id="adminCardQuickReport">
@@ -10215,7 +10229,7 @@
                         <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
                             <span class="status-badge" style="background:#fff;color:${meta.color};border:1px solid ${meta.border};">EDT ${pctBadge(edtAvg)}</span>
                             <span class="status-badge" style="background:#fff;color:#0891b2;border:1px solid #a5f3fc;">QR ${pctBadge(qrAvg)}</span>
-                            <span class="status-badge" style="background:#fff;color:#059669;border:1px solid #a7f3d0;">Ontime ${pctBadge(otAvg)}</span>
+                            <span class="status-badge" style="background:#fff;color:#059669;border:1px solid #a7f3d0;">Pickup Ontime ${pctBadge(otAvg)}</span>
                         </div>
                     </div>
                     <div style="margin-top:10px; background:#fff; border:1px solid ${meta.border}; border-radius:8px; overflow-x:auto;">
@@ -10224,7 +10238,7 @@
                                 <th style="text-align:left; padding:6px; font-size:10.5px;">พนักงาน</th>
                                 <th style="padding:6px; font-size:10.5px;">EDT %</th>
                                 <th style="padding:6px; font-size:10.5px;">QR %</th>
-                                <th style="padding:6px; font-size:10.5px;">Ontime %</th>
+                                <th style="padding:6px; font-size:10.5px;">Pickup Ontime %</th>
                             </tr></thead>
                             <tbody>${employeeRowsHtml}</tbody>
                         </table>
@@ -10329,6 +10343,94 @@
             } catch (err) {
                 console.error(err);
                 triggerToast('บันทึกไม่สำเร็จ กรุณาสร้างตาราง missed_delivery_daily ก่อน (missed_date, courier_name เป็นคีย์คู่กัน)', 'danger');
+            }
+        }
+
+        // ===================== SUPERVISOR GROUP REPORT (all 3 groups, 1 page, red highlight) =====================
+        // Highlights an employee row red when: has a missed-delivery case, OR EDT% < 100, OR QR% < 30
+        async function generateSupervisorReport() {
+            const dateField = document.getElementById('supervisorSummaryDate');
+            const dateStr = dateField.value || todayStr();
+            if (!dateField.value) dateField.value = dateStr;
+            const wrap = document.getElementById('supervisorReportWrap');
+            const body = document.getElementById('supervisorReportBody');
+            wrap.style.display = 'block';
+            document.getElementById('supervisorReportDateLabel').textContent = formatLocalizedDateTitle(dateStr);
+            body.innerHTML = `<div class="empty-state-note">กำลังรวบรวมข้อมูล...</div>`;
+
+            const employeeStats = await computeEmployeeStatsForDate(dateStr);
+            let missedRows = [];
+            try { missedRows = await sbSelectMissedCase(dateStr); }
+            catch (err) { console.warn("generateSupervisorReport: sbSelectMissedCase error", err); }
+
+            let groupsHtml = '';
+            GROUP_KEYS.forEach(gk => {
+                const meta = GROUP_META[gk];
+                const groupCouriers = COURIER_LIST.filter(c => c.group === gk);
+                const statList = employeeStats[gk] || [];
+
+                const rowsHtml = groupCouriers.length ? groupCouriers.map(c => {
+                    const s = statList.find(x => x.courierId === c.id) || {};
+                    const missedEntry = (missedRows || []).find(r => {
+                        const u = (r.courier_name || '').toUpperCase();
+                        return u.startsWith(c.id.toUpperCase()) || u.includes(' ' + c.id.toUpperCase()) || u === c.id.toUpperCase() || (c.name && u.includes(c.name.toUpperCase()));
+                    });
+                    const missedCount = missedEntry ? (missedEntry.case_count || 0) : 0;
+                    const isFlagged = missedCount > 0 || (s.edtPct != null && s.edtPct < 100) || (s.qrPct != null && s.qrPct < 30);
+                    const rowStyle = isFlagged ? 'background:#fee2e2; color:#991b1b; font-weight:700;' : '';
+                    return `
+                        <tr style="${rowStyle}">
+                            <td style="text-align:left; padding:5px 6px; font-size:10.5px;">${c.name || c.id}</td>
+                            <td style="padding:5px 6px; font-size:10.5px; text-align:center;">${s.edtPct != null ? s.edtPct.toFixed(1) + '%' : '-'}</td>
+                            <td style="padding:5px 6px; font-size:10.5px; text-align:center;">${s.qrPct != null ? s.qrPct.toFixed(1) + '%' : '-'}</td>
+                            <td style="padding:5px 6px; font-size:10.5px; text-align:center;">${s.ontimePct != null ? s.ontimePct.toFixed(1) + '%' : '-'}</td>
+                            <td style="padding:5px 6px; font-size:10.5px; text-align:center;">${missedCount > 0 ? missedCount : '-'}</td>
+                        </tr>`;
+                }).join('') : `<tr><td colspan="5" style="text-align:center; padding:8px; font-size:11px; color:var(--dhl-grey);">ไม่มีพนักงานในกลุ่มนี้</td></tr>`;
+
+                groupsHtml += `
+                    <div style="margin-bottom:18px; border:1.5px solid ${meta.border}; border-radius:10px; overflow:hidden;">
+                        <div style="font-weight:800; font-size:12.5px; color:#fff; background:${meta.color}; padding:8px 10px;">${meta.emoji} ${meta.label} · ผู้ดูแล ${meta.supervisor}</div>
+                        <div style="overflow-x:auto; background:${meta.bg};">
+                            <table class="edt-table" style="width:100%; min-width:480px;">
+                                <thead><tr style="background:${meta.bg};">
+                                    <th style="text-align:left; padding:6px; font-size:10px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">พนักงาน</th>
+                                    <th style="padding:6px; font-size:10px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">EDT %</th>
+                                    <th style="padding:6px; font-size:10px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">QR %</th>
+                                    <th style="padding:6px; font-size:10px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">Pickup Ontime %</th>
+                                    <th style="padding:6px; font-size:10px; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">เคสไม่ได้รับ</th>
+                                </tr></thead>
+                                <tbody style="background:#fff;">${rowsHtml}</tbody>
+                            </table>
+                        </div>
+                    </div>`;
+            });
+
+            body.innerHTML = `
+                <div style="font-size:12px; color:#991b1b; margin-bottom:12px; display:flex; align-items:center; gap:8px; background:#fee2e2; border:1.5px solid #fca5a5; border-radius:8px; padding:8px 12px; font-weight:700;">
+                    <i class="fa-solid fa-triangle-exclamation" style="color:#dc2626; font-size:14px;"></i>
+                    ไฮไลต์แดง = มีเคสเดลไม่ได้รับ หรือ EDT ไม่ถึง 100% หรือ QR ไม่ถึง 30%
+                </div>
+                ${groupsHtml}
+            `;
+            triggerToast('สร้างสรุป Report กลุ่มผู้ดูแลแล้ว', 'success');
+        }
+
+        async function exportSupervisorReportImage() {
+            if (!window.html2canvas) { triggerToast(t("toast_export_tool_load_fail"), "danger"); return; }
+            const target = document.getElementById('supervisorReportCard');
+            if (!target) return;
+            triggerToast(t("toast_generating_report_image"), "success");
+            try {
+                const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2 });
+                const link = document.createElement('a');
+                const dateVal = document.getElementById('supervisorSummaryDate').value || todayStr();
+                link.download = `dhl_supervisor_report_${dateVal}.png`;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            } catch (err) {
+                console.error(err);
+                triggerToast(t("toast_export_image_fail"), "danger");
             }
         }
 
