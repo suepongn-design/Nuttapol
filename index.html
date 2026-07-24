@@ -2956,7 +2956,7 @@
         const GROUP_META = {
             green: { label: 'กรุ๊ปสีเขียว', supervisor: 'Nut',  color: '#2e7d32', bg: '#e8f5e9', border: '#a5d6a7', emoji: '🟢' },
             blue:  { label: 'กรุ๊ปสีฟ้า',   supervisor: 'Ton',  color: '#0277bd', bg: '#e3f2fd', border: '#90caf9', emoji: '🔵' },
-            peach: { label: 'กรุ๊ปสีเนื้อ',  supervisor: 'Don',  color: '#c2410c', bg: '#fff1e6', border: '#fecba1', emoji: '🟠' }
+            peach: { label: 'กรุ๊ปสีน้ำตาล',  supervisor: 'Don',  color: '#c2410c', bg: '#fff1e6', border: '#fecba1', emoji: '🟤' }
         };
         const COURIER_GROUP_DEFAULTS = {
             BPED09:'green', BPEQ01:'green', BPEQ03:'green', BPEQ04:'green', BPEQ09:'green', BPEQ11:'green', BPEQ12:'green', BPET02:'green', BPET05:'green',
@@ -5570,19 +5570,65 @@
                         return u.startsWith(c.id.toUpperCase()) || u.includes(' ' + c.id.toUpperCase()) || u === c.id.toUpperCase() || (c.name && u.includes(c.name.toUpperCase()));
                     });
                     const missedCount = missedEntry ? (missedEntry.case_count || 0) : 0;
-                    const edtFlagged = s.edtPct != null && s.edtPct < 100;
-                    const qrFlagged = s.qrPct != null && s.qrPct < 30;
+                    // Compare against the ROUNDED (displayed) value so the highlight
+                    // always agrees with what's actually shown on screen — e.g. a raw
+                    // 99.96% that displays as "100.0%" should count as perfect, not flagged.
+                    const edtDisplay = s.edtPct != null ? s.edtPct.toFixed(1) : null;
+                    const edtIsPerfect = edtDisplay === '100.0';
+                    const edtFlagged = edtDisplay != null && parseFloat(edtDisplay) < 100;
+                    const qrNoData = s.qrPct == null;
+                    const qrFlagged = !qrNoData && s.qrPct < 30;
                     const missedFlagged = missedCount > 0;
-                    const cellHighlight = 'background:#fee2e2; color:#991b1b; font-weight:700;';
+                    const redHighlight = 'background:#fee2e2; color:#991b1b; font-weight:700;';
+                    const greenHighlight = 'background:#dcfce7; color:#15803d; font-weight:700;';
+                    const edtCell = edtDisplay != null
+                        ? `<td style="padding:4px 2px; font-size:12px; text-align:center; ${edtIsPerfect ? greenHighlight : (edtFlagged ? redHighlight : '')}">${edtDisplay}%</td>`
+                        : `<td style="padding:4px 2px; font-size:12px; text-align:center;">-</td>`;
+                    const qrCell = qrNoData
+                        ? `<td style="padding:4px 2px; font-size:11px; text-align:center; color:#dc2626; font-weight:700;">ไม่เปิดใช้</td>`
+                        : `<td style="padding:4px 2px; font-size:12px; text-align:center; ${qrFlagged ? redHighlight : ''}">${s.qrPct.toFixed(1)}%</td>`;
+                    const missedCell = missedCount > 0
+                        ? `<td style="padding:4px 2px; font-size:12px; text-align:center; ${redHighlight}">${missedCount}</td>`
+                        : `<td style="padding:4px 2px; font-size:11px; text-align:center; color:var(--dhl-grey);">ไม่มีเคส</td>`;
                     return `
                         <tr>
                             <td style="text-align:left; padding:4px 3px; font-size:12px; word-break:break-word;">${c.name || c.id}</td>
-                            <td style="padding:4px 2px; font-size:12px; text-align:center; ${edtFlagged ? cellHighlight : ''}">${s.edtPct != null ? s.edtPct.toFixed(1) + '%' : '-'}</td>
-                            <td style="padding:4px 2px; font-size:12px; text-align:center; ${qrFlagged ? cellHighlight : ''}">${s.qrPct != null ? s.qrPct.toFixed(1) + '%' : '-'}</td>
+                            ${edtCell}
+                            ${qrCell}
                             <td style="padding:4px 2px; font-size:12px; text-align:center;">${s.ontimePct != null ? s.ontimePct.toFixed(1) + '%' : '-'}</td>
-                            <td style="padding:4px 2px; font-size:12px; text-align:center; ${missedFlagged ? cellHighlight : ''}">${missedCount > 0 ? missedCount : '-'}</td>
+                            ${missedCell}
                         </tr>`;
                 }).join('') : `<tr><td colspan="5" style="text-align:center; padding:8px; font-size:11px; color:var(--dhl-grey);">ไม่มีพนักงานในกลุ่มนี้</td></tr>`;
+
+                // Summary/total row per group: averages EDT%/QR%/Pickup Ontime% across
+                // employees who actually have data that day, and sums missed cases.
+                let totalRowHtml = '';
+                if (groupCouriers.length) {
+                    const edtValues = [], qrValues = [], otValues = [];
+                    let missedSum = 0;
+                    groupCouriers.forEach(c => {
+                        const s = statList.find(x => x.courierId === c.id) || {};
+                        if (s.edtPct != null) edtValues.push(s.edtPct);
+                        if (s.qrPct != null) qrValues.push(s.qrPct);
+                        if (s.ontimePct != null) otValues.push(s.ontimePct);
+                        const missedEntry = (missedRows || []).find(r => {
+                            const u = (r.courier_name || '').toUpperCase();
+                            return u.startsWith(c.id.toUpperCase()) || u.includes(' ' + c.id.toUpperCase()) || u === c.id.toUpperCase() || (c.name && u.includes(c.name.toUpperCase()));
+                        });
+                        if (missedEntry) missedSum += (missedEntry.case_count || 0);
+                    });
+                    const avg = (arr) => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length) : null;
+                    const edtAvg = avg(edtValues), qrAvg = avg(qrValues), otAvg = avg(otValues);
+                    totalRowHtml = `
+                        <tr style="background:${meta.bg}; border-top:2px solid ${meta.border};">
+                            <td style="text-align:left; padding:5px 3px; font-size:12px; font-weight:800; color:${meta.color};">Total (เฉลี่ย/รวม)</td>
+                            <td style="padding:5px 2px; font-size:12px; text-align:center; font-weight:800; color:${meta.color};">${edtAvg != null ? edtAvg.toFixed(1) + '%' : '-'}</td>
+                            <td style="padding:5px 2px; font-size:12px; text-align:center; font-weight:800; color:${meta.color};">${qrAvg != null ? qrAvg.toFixed(1) + '%' : 'ไม่เปิดใช้'}</td>
+                            <td style="padding:5px 2px; font-size:12px; text-align:center; font-weight:800; color:${meta.color};">${otAvg != null ? otAvg.toFixed(1) + '%' : '-'}</td>
+                            <td style="padding:5px 2px; font-size:12px; text-align:center; font-weight:800; color:${meta.color};">${missedSum > 0 ? missedSum : 'ไม่มีเคส'}</td>
+                        </tr>`;
+                }
+
                 groupsHtml += `
                     <div style="margin-bottom:18px; border:1.5px solid ${meta.border}; border-radius:10px; overflow:hidden;">
                         <div style="font-weight:800; font-size:12.5px; color:#fff; background:${meta.color}; padding:8px 10px;">${meta.emoji} ${meta.label} · ผู้ดูแล ${meta.supervisor}</div>
@@ -5598,7 +5644,7 @@
                                     <th style="text-align:center; padding:4px 2px; font-size:10.5px; white-space:nowrap; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">Pickup Ontime %</th>
                                     <th style="text-align:center; padding:4px 2px; font-size:10.5px; white-space:nowrap; color:${meta.color}; border-bottom:1.5px solid ${meta.border};">เดลไม่ได้รับ</th>
                                 </tr></thead>
-                                <tbody style="background:#fff;">${rowsHtml}</tbody>
+                                <tbody style="background:#fff;">${rowsHtml}${totalRowHtml}</tbody>
                             </table>
                         </div>
                     </div>`;
@@ -5621,7 +5667,9 @@
                         <i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> คำอธิบายไฮไลต์แดง
                     </button>
                     <div id="supervisorReportLegendText" style="display:none; margin-top:6px; font-size:11.5px; color:#991b1b; background:#fef2f2; border:1px solid #fca5a5; border-radius:8px; padding:8px 12px;">
-                        ไฮไลต์แดง = มีเคสเดลไม่ได้รับ หรือ EDT ไม่ถึง 100% หรือ QR ไม่ถึง 30%
+                        <span style="color:#15803d; font-weight:700;">ไฮไลต์เขียว</span> = EDT ครบ 100%<br>
+                        <span style="color:#991b1b; font-weight:700;">ไฮไลต์แดง</span> = มีเคสเดลไม่ได้รับ หรือ EDT ไม่ถึง 100% หรือ QR ไม่ถึง 30%<br>
+                        <span style="color:#dc2626; font-weight:700;">"ไม่เปิดใช้"</span> = วันนั้นไม่มีข้อมูล QR Payment
                     </div>
                 </div>
                 ${groupsHtml}
